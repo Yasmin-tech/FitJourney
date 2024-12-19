@@ -23,7 +23,12 @@ class Config():
     MYSQL_DB = getenv("MYSQL_DB", "FitJourney")
     MYSQL_HOST = getenv("MYSQL_HOST", "localhost")
 
-    SQLALCHEMY_DATABASE_URI = "mysql+mysqlclient://{}:{}@{}/{}".format(
+    print("MYSQL_USERNAME: ", MYSQL_USERNAME)
+    print("MYSQL_PASSWORD: ", MYSQL_PASSWORD)
+    print("MYSQL_DB: ", MYSQL_DB)
+    print("MYSQL_HOST: ", MYSQL_HOST)
+
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://{}:{}@{}/{}".format(
             MYSQL_USERNAME,
             MYSQL_PASSWORD,
             MYSQL_HOST,

@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""
+    Flask app for the backend RESTFull API
+    """
+
+import os
+import subprocess
+
+lock_file = ".setup_done"
+
+# Check if the setup has already been done
+def setup_user_and_database():
+    if os.path.exists(lock_file):
+        print("The setup for Mysql user and databse has already been done.")
+        return
+
+    print("Setting up the MySQL user and database.")
+    try:
+        result = subprocess.run(["../SetUp/setup_user_and_database.sh"], check=True)
+        print("Bash script executed successfully.")
+        with open(lock_file, "w") as f:
+            f.write("The setup has been done.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running the Bash script: {e}")
+
+
+from flask import Flask
+from models.base import db
+from config import Config
+
+
+app = Flask(__name__)
+
+# Get the configuration from config.py
+app.config.from_object(Config)
+
+# initialize and connect the app to sqlalchemy
+db.init_app(app)
+with app.app_context():
+    db.create_all()
+
+
+if __name__ == '__main__':
+    setup_user_and_database()
+    app.run(host="localhost", port="5001",debug=True)
