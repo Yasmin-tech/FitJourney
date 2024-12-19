@@ -27,6 +27,15 @@ def setup_user_and_database():
 from flask import Flask
 from models.base import db
 from config import Config
+from flask_migrate import Migrate
+
+from models.user import User
+from models.plan import Plan
+from models.custom_exercise import CustomExercise
+from models.record import Record
+from models.exercise import Exercise
+from models.day import Day
+from models.workout_session import WorkoutSession
 
 
 app = Flask(__name__)
@@ -36,6 +45,8 @@ app.config.from_object(Config)
 
 # initialize and connect the app to sqlalchemy
 db.init_app(app)
+migrate = Migrate(app, db)
+
 with app.app_context():
     db.create_all()
 
