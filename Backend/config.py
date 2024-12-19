@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from os import getenv
 
 
-load_dotenv() # Load environment variables from .env file
+load_dotenv()  # Load environment variables from .env file
 
 
 class Config():
@@ -23,4 +23,8 @@ class Config():
     MYSQL_DB = getenv("MYSQL_DB", "FitJourney")
     MYSQL_HOST = getenv("MYSQL_HOST", "localhost")
 
-    SQLALCHEMY_DATABASE_URI = f"mysql+mysqlclient://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+    SQLALCHEMY_DATABASE_URI = "mysql+mysqlclient://{}:{}@{}/{}".format(
+            MYSQL_USERNAME,
+            MYSQL_PASSWORD,
+            MYSQL_HOST,
+            MYSQL_DB)
