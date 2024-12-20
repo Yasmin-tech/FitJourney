@@ -48,9 +48,9 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 with app.app_context():
+    setup_user_and_database()
     db.create_all()
 
 
 if __name__ == '__main__':
-    setup_user_and_database()
     app.run(host="localhost", port="5001",debug=True)

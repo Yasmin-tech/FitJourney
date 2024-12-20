@@ -7,6 +7,7 @@
 
 from dotenv import load_dotenv
 from os import getenv
+import subprocess
 
 
 load_dotenv()  # Load environment variables from .env file
@@ -16,12 +17,10 @@ class Config():
     """
         The base configuration class """
 
-    # Set default values for environment variables if they are not provided
-
-    MYSQL_USERNAME = getenv("MYSQL_USERNAME", "fit_journey_user")
-    MYSQL_PASSWORD = getenv("MYSQL_PASSWORD", "my_passowrd")
-    MYSQL_DB = getenv("MYSQL_DB", "FitJourney")
-    MYSQL_HOST = getenv("MYSQL_HOST", "localhost")
+    MYSQL_USERNAME = getenv("MYSQL_USERNAME")
+    MYSQL_PASSWORD = getenv("MYSQL_PASSWORD")
+    MYSQL_DB = getenv("MYSQL_DB")
+    MYSQL_HOST = getenv("MYSQL_HOST")
 
     print("MYSQL_USERNAME: ", MYSQL_USERNAME)
     print("MYSQL_PASSWORD: ", MYSQL_PASSWORD)

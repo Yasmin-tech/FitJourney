@@ -9,6 +9,7 @@ if [[ -z "$MYSQL_USERNAME" || -z "$MYSQL_PASSWORD" || -z "$MYSQL_DB" || -z "$MYS
   exit 1
 fi
 
+
 # Prompt for the MySQL root password securely
 echo -n "Enter MySQL root password: "
 read -s MYSQL_ROOT_PASSWORD
@@ -23,4 +24,3 @@ FLUSH PRIVILEGES;
 EOF
 
 echo "User and database setup complete."
-
