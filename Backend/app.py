@@ -51,6 +51,9 @@ with app.app_context():
     setup_user_and_database()
     db.create_all()
 
+# Register the blueprints
+from api.v1.views import views_bp
+app.register_blueprint(views_bp)
 
 if __name__ == '__main__':
     app.run(host="localhost", port="5001",debug=True)
