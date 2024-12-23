@@ -25,9 +25,12 @@ def setup_user_and_database():
 
 
 from flask import Flask
+from mega import Mega
 from models.base import db
 from config import Config
 from flask_migrate import Migrate
+from api.v1.views import views_bp
+from errors import errors_bp
 
 from models.user import User
 from models.plan import Plan
@@ -51,9 +54,11 @@ with app.app_context():
     setup_user_and_database()
     db.create_all()
 
+
 # Register the blueprints
-from api.v1.views import views_bp
 app.register_blueprint(views_bp)
+app.register_blueprint(errors_bp)
+
 
 if __name__ == '__main__':
     app.run(host="localhost", port="5001",debug=True)

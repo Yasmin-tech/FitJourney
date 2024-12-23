@@ -7,4 +7,7 @@ export MYSQL_PASSWORD="fit_journey_password"
 export MYSQL_DB="FitJourney"
 export MYSQL_HOST="localhost"
 
+export MEGA_EMAIL="fitjourney57@gmail.com"
+export MEGA_PASSWORD="password123#S"
+
 export PYTHONPATH=$PYTHONPATH:/home/yasminmahmud/FitJourney/Backend

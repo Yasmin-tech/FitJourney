@@ -24,3 +24,5 @@ class Day(db.Model):
     title: Mapped[str] = db.mapped_column(String(128), nullable=False)
     sesion_duration: Mapped[int] = db.mapped_column(Integer, nullable=True)
     workout_sessions: Mapped[List["WorkoutSession"]] = relationship("WorkoutSession", back_populates="day", cascade="all, delete-orphan")
+    plan: Mapped["Plan"] = relationship("Plan", back_populates="days")
+

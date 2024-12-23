@@ -29,6 +29,7 @@ class Record(db.Model):
     location: Mapped[str] = db.mapped_column(String(128), nullable=False)
     notes: Mapped[str] = db.mapped_column(String(255), nullable=True)
     user_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user: Mapped["User"] = relationship("User", back_populates="records")
     exercise_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("exercises.id"), nullable=True)
     custom_exercise_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("custom_exercises.id"), nullable=True)
     exercise: Mapped["Exercise"] = relationship("Exercise", back_populates="records")

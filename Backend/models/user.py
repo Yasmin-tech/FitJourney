@@ -4,14 +4,15 @@
     """
 
 
-from models.base import db
+from models.base import db, BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, DateTime
 from datetime import datetime
 from typing import Optional, List
+import bcrypt
 
 
-class User(db.Model):
+class User(BaseModel, db.Model):
     """ 
         the user class that maps to the users table in the MySQL database
         """
@@ -30,3 +31,28 @@ class User(db.Model):
     records: Mapped[List["Record"]] = relationship("Record", back_populates="user", cascade="all, delete-orphan")
     created_at: Mapped[datetime] = db.mapped_column(DateTime, default=datetime.utcnow)
 
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.password = kwargs.get("password")
+        self.created_at = datetime.utcnow()
+
+    @property
+    def password(self):
+        raise AttributeError("Password is not a readable attribute")
+
+    @password.setter
+    def password(self, password):
+        self.password_hashed = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()).decode("utf-8")
+    
+    def check_password(self, password):
+        # Check if the password passed by the user, matches the password in the database
+        return bcrypt.checkpw(password.encode("utf-8"), self.password_hashed.encode("utf-8"))
+    
+    def to_dict(self):
+        # Delete the password_hashed from the dictionary before returning it
+        new_dict = super().to_dict()
+        del new_dict["password_hashed"]
+        return new_dict
