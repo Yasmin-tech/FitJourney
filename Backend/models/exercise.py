@@ -4,14 +4,14 @@
     """
 
 
-from models.base import db
+from models.base import BaseModel, db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, DateTime, ForeignKey, Float, Table
 from datetime import datetime
 from typing import Optional, List
 
 
-class Exercise(db.Model):
+class Exercise(BaseModel, db.Model):
     """ 
         the exercise class that maps to the exercises table in the MySQL database
         """
@@ -29,3 +29,7 @@ class Exercise(db.Model):
     img_url: Mapped[Optional[str]] = db.mapped_column(String(255), nullable=True)
     workout_sessions: Mapped[List["WorkoutSession"]] = relationship("WorkoutSession", secondary="workout_sessions_exercises", back_populates="exercises")
     records: Mapped[List["Record"]] = relationship("Record", back_populates="exercise")
+
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

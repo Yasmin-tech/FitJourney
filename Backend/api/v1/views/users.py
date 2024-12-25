@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+""" API endpoints for the users """
+
 
 from . import views_bp
 from models.base import db
