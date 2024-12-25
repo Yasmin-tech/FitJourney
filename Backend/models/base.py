@@ -38,7 +38,7 @@ class BaseModel():
         return datetime.strptime(value, time_format)
 
     # return a json serializable dictionary
-    def to_dict(self):
+    def to_dict(self, time_format=time_format):
         # new_dict = self.__dict__.copy()
         new_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
         for key, value in new_dict.items():

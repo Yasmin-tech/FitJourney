@@ -5,14 +5,14 @@
     """
 
 
-from models.base import db
+from models.base import BaseModel, db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, DateTime, ForeignKey, Float, Table
 from datetime import datetime
 from typing import Optional, List
 
 
-class CustomExercise(db.Model):
+class CustomExercise(BaseModel, db.Model):
     """ 
         the custom exercise class that maps to the custom exercises table in the MySQL database
         """
@@ -33,3 +33,6 @@ class CustomExercise(db.Model):
     user: Mapped["User"] = relationship("User", back_populates="custom_exercises")
     records: Mapped[List["Record"]] = relationship("Record", back_populates="custom_exercise")
 
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
