@@ -9,7 +9,11 @@ from models.plan import Plan
 from models.custom_exercise import CustomExercise
 from models.record import Record
 from flask import request, jsonify, abort, url_for
-from mega_config import m
+from google_api import ManageDrive
+import os
+
+
+drive = ManageDrive()
 
 
 @views_bp.route('/users', methods=['GET'], strict_slashes=False)
@@ -116,11 +120,21 @@ def remove_user(user_id):
 
     if user is None:
         return abort(404, description="User not found")
+
+    # Delete the user's folder from drive
+    user_folder = drive.find_folder_id("user_" + str(user_id), drive.users_folder_id)
+    if user_folder:
+        try:
+            result, message = drive.delete_file(file_id=user_folder)
+            if not result:
+                return abort(500, description=f"Internal Server Error: {message}")
+        except Exception as e:
+            return abort(500, description=f"Internal Server Error: {e}")
+        
     
     # Remove the user from the database
     db.session.delete(user)
     db.session.commit()
-
     return jsonify({"message": "User deleted successfully"}), 200
 
 
@@ -156,18 +170,27 @@ def upload_profile_picture(user_id):
     if profile_picture.filename == "":
         return abort(400, description="Bad Request: No selected file")
     
-    # Create user directory and subdirectory for profile pictures in MEGA
-    try:
-        root_folder = m.find("FitJourney")
-        user_folder = m.find(f"user_{user_id}", root_folder[0])
-        if not user_folder:
-            user_folder = m.create_folder(f"user_{user_id}", root_folder[0])
+    # Create user directory and subdirectory for profile pictures in Drive
+    # try:
 
-        profile_pic_folder = m.find("profilepic", user_folder[0])
-        if not profile_pic_folder:
-            profile_pic_folder = m.create_folder("profilepic", user_folder[0])
-    except Exception as e:
-        return abort(500, description=f"Internal Server Error in Mega: {e}")
+    # Get the root folder
+    root_folder = drive.root_folder_id
+    users = drive.users_folder_id
+
+    current_user_folder_name = f"user_{user_id}"
+    # Create a folder for the current user if it doesn't exist
+    user_folder = drive.find_folder_id(current_user_folder_name, users)
+    if not user_folder:
+        user_folder = drive.create_folder(current_user_folder_name, users)
+    
+    # print(user_folder)
+
+    # Create a folder for the profile pictures if it doesn't exist
+    profile_pic_folder = drive.find_folder_id("profilepic", user_folder)
+    if not profile_pic_folder:
+        profile_pic_folder = drive.create_folder("profilepic", user_folder)
+
+    # print(profile_pic_folder)
 
     # Construct the file path
     directory_path = f'tmp/fitjourney/user_{user_id}/profilepic'
@@ -178,50 +201,81 @@ def upload_profile_picture(user_id):
     # Save the file to the temp folder
     profile_picture.save(file_path)
 
-    # Upload the file to Mega
-    file_uploaded = m.upload(file_path, profile_pic_folder[0])
-    file_url = m.get_upload_link(file_uploaded)
+    file_id, file_url = drive.find_file_id(profile_picture.filename, profile_pic_folder)
+    if file_id:
+        return abort(400, description=f"Bad Request: File already exists {file_url.split('&')[0]}")
 
+    # Upload the file to drive
+    file_id, web_view_link, web_content_link = drive.upload_file(file_path, profile_pic_folder)
+
+    web_content_link = web_content_link.split("&")[0]
+
+    # print(f"File ID: {file_id}")
+    # print(f"Web View Link: {web_view_link}")
+    # print(f"Web Content Link: {web_content_link}")
+
+    # Update the user profile picture URL in the database
+    user.profile_picture = web_content_link
+    db.session.commit()
     # Remove the file from the temp folder
     os.remove(file_path)
 
     # Return the file url as a json object
-    return jsonify({"file_url": file_url}), 201
+    return jsonify({"message": "File uploaded successfully" ,"file_url": web_content_link}), 201
 
 
-@views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['PUT'], strict_slashes=False)
+@views_bp.route('/users/<int:user_id>/update_profile_picture', methods=['PUT'], strict_slashes=False)
 def update_profile_picture(user_id):
     """ Update the profile picture for the user """
     user = db.session.get(User, user_id)
-
     if user is None:
         return abort(404, description="User not found")
     
-    # Check if the request has a file
     if "file" not in request.files:
         return abort(400, description="Bad Request: No file part")
     
     profile_picture = request.files.get("file")
     if profile_picture.filename == "":
         return abort(400, description="Bad Request: No selected file")
-    
-    # Fetch the existing profile picture URL
-    existing_profile_picture_url = user.profile_picture
 
-    # If there is an existing profile picture, delete it from MEGA
-    if existing_profile_picture_url:
+    # Delete the old profile picture if it exists
+    old_profile_picture_url = user.profile_picture
+    print(old_profile_picture_url)
+    if old_profile_picture_url:
         try:
-            node = m.get_node_from_link(existing_profile_picture_url)
-            m.delete(node)
+            result, message = drive.delete_file(webContentLink=old_profile_picture_url)
+            print(result, message)
+            if not result:
+                return abort(500, description=f"Failed to delete old profile picture: {message}")
         except Exception as e:
-            return abort(500, description=f"Internal Server Error in Mega: {e}")
+            return abort(500, description=f"Internal Server Error: {e}")
+
+    # Save the new profile picture to a temporary location
+    directory_path = f'tmp/fitjourney/user_{user_id}/profilepic'
+    file_path = f"{directory_path}/{profile_picture.filename}"
+    os.makedirs(directory_path, exist_ok=True)
+    profile_picture.save(file_path)
     
-    # Create user directory and subdirectory for profile pictures in MEGA
+    # Upload the new profile picture to Google Drive
+    try:
+        profile_pic_folder = drive.find_folder_id("profilepic", drive.find_folder_id("user_" + str(user_id), drive.users_folder_id))
+        file_id, web_view_link, web_content_link = drive.upload_file(file_path, profile_pic_folder)
+        if not file_id:
+            return abort(500, description="Failed to upload new profile picture")
 
-    return url_for(upload_profile_picture, user_id=user_id, _method="POST")
+        # Update the user's profile picture URL in the database
+        web_content_link = web_content_link.split("&")[0]
+        user.profile_picture = web_content_link
+        db.session.commit()
+
+        # Remove the file from the temp folder
+        os.remove(file_path)
+        return jsonify({"message": "Profile picture updated successfully", "new_profile_picture_url": web_content_link}), 200
+    except Exception as e:
+        return abort(500, description=f"Internal Server Error: {e}")
 
 
-@views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['DELETE'], strict_slashes=False)
+@views_bp.route('/users/<int:user_id>/delete_profile_picture', methods=['DELETE'], strict_slashes=False)
 def delete_profile_picture(user_id):
     """ Delete the profile picture for the user """
 
@@ -229,19 +283,19 @@ def delete_profile_picture(user_id):
     if user is None:
         return abort(404, description="User not found")
     
-    # Fetch the existing profile picture URL
     profile_picture_url = user.profile_picture
-
     if not profile_picture_url:
         return abort(404, description="Profile picture not found")
-    
-    # update the user profile picture to None
-    user.profile_picture = None
-    db.session.commit()
 
-    # Delete the profile picture from MEGA
     try:
-        node = m.get_node_from_link(existing_profile_picture_url)
-        m.delete(node)
+        result, message = drive.delete_file(webContentLink=profile_picture_url)
+        
+        if result is True:
+            # update the user profile picture to None
+            user.profile_picture = None
+            db.session.commit()
+            return jsonify({"message": message}), 200
+        
+        return abort(500, description=f"Internal Server Error: {message}")
     except Exception as e:
-        return abort(500, description=f"Internal Server Error in Mega: {e}")
+        return abort(500, description=f"Internal Server Error: {e}")
