@@ -6,6 +6,10 @@ from . import views_bp
 from models.base import db
 from models.exercise import Exercise
 from flask import request, jsonify, abort, url_for
+import os
+from google_api import ManageDrive
+
+drive = ManageDrive()
 
 
 @views_bp.route('/exercises', methods=['GET'], strict_slashes=False)
@@ -104,3 +108,203 @@ def delete_exercise(exercise_id):
     db.session.commit()
     # Return a success message
     return jsonify({"message": "Exercise deleted successfully"}), 200
+
+
+# -----Manage uploading, updating and deleting exercises images and videos in google drive----------------------
+
+@views_bp.route('/exercises/<int:exercise_id>/media_file', methods=['GET'], strict_slashes=False)
+def get_exercise_media_file(exercise_id):
+    """ Retrieve the media file stored as url for the exercise """
+    
+    # Check if the exercise exists
+    exercise = db.session.get(Exercise, exercise_id)
+
+    if exercise is None:
+        return abort(404, description="Exercise not found")
+
+    # Check if the exercise has a media file
+    if exercise.media_file_url is None:
+        return abort(404, description="Media file not found")
+    
+    # Return the media file url as a json object
+    return jsonify({"media_file_url": exercise.media_file_url}), 200
+
+
+@views_bp.route('/exercises/<int:exercise_id>/upload_media', methods=['POST'], strict_slashes=False)
+def upload_exercise_media(exercise_id):
+    """ Upload the media for the exercise to Google Drive """
+
+    # Check if the custom_exercise exists
+    exercise = db.session.get(Exercise, exercise_id)
+
+    if exercise is None:
+        return abort(404, description="Exercise not found")
+    
+    # access the query parameters
+    media_file_url = request.args.get('media_file_url', None)
+
+    # if url is provided, save it directly to the database
+    if media_file_url:
+        exercise.media_file_url = media_file_url
+        db.session.commit()
+        return jsonify(exercise.to_dict()), 200
+
+    # Upload the media to Google Drive if payload exists
+    media_file = request.files.get('media_file', None)
+    if not media_file:
+        return abort(400, description="Bad Request: Missing media file")
+
+    if media_file.filename == "":
+        return abort(400, description="Bad Request: Media file is not selected")
+
+
+    # save path to the media file locally
+
+    directory_path = f'tmp/fitjourney/exercises'
+    media_file_name = f'file_{exercise_id}_' + media_file.filename
+    print(media_file_name)
+    file_path = f"{directory_path}/{media_file_name}"
+    # Ensure the directory exists
+    os.makedirs(directory_path, exist_ok=True)
+    # Save the file to the temp folder
+    media_file.save(file_path)
+
+    # Upload the file to Google Drive
+    default_exercises_folder = drive.default_exercises_folder
+
+    file_id, file_url = drive.find_file_id(media_file_name, default_exercises_folder)
+    if file_id:
+        os.remove(file_path)
+        return abort(400, description=f"Bad Request: File already exists {file_url.split('&')[0]}")
+
+    file_id, supported_file_type, web_content_link = drive.upload_file(file_path, default_exercises_folder)
+    os.remove(file_path)
+
+    if not supported_file_type:
+        return abort(400, description="Bad Request: Unsupported file type")
+
+    if web_content_link:
+        web_content_link = web_content_link.split("&")[0]
+    else:
+        return abort(500, description="Internal Server Error: An error occurred while uploading the file")
+
+    # Update the media_file_url in the database
+    exercise.media_file_url = web_content_link
+    db.session.commit()
+    # Return the custom_exercise as a json object
+    return jsonify({"message": f"The exercise media has been created successfully {web_content_link}"}), 201
+
+
+@views_bp.route('/exercises/<int:exercise_id>/update_media', methods=['PUT'], strict_slashes=False)
+def update_exercise__media(exercise_id):
+    """ Update the media for the exercises """
+    exercise = db.session.get(Exercise, exercise_id)
+
+    if exercise is None:
+        return abort(404, description="Custom Exercise not found")
+    
+    # access the query parameters
+    media_file_url = request.args.get('media_file_url', None)
+
+    # if url is provided, save it directly to the database
+    if media_file_url:
+         # Delete the old media file
+        old_media_file_url = exercise.media_file_url
+        if old_media_file_url:
+            try:
+                result, message = drive.delete_file(webContentLink=old_media_file_url)
+                print(result, message)
+                if not result:
+                    # if google drive return false, the file is not in drive
+                    exercise.media_file_url = None
+
+            except Exception as e:
+                return abort(500, description=f"Internal Server Error: {e}")
+        exercise.media_file_url = media_file_url
+        db.session.commit()
+        return jsonify(exercise.to_dict()), 200
+
+    # Check payload for media file
+    media_file = request.files.get('media_file', None)
+    if not media_file:
+        return abort(400, description="Bad Request: Missing media file")
+
+    if media_file.filename == "":
+        return abort(400, description="Bad Request: Media file is not selected")
+
+    # save path to the media file locally
+
+    directory_path = f'tmp/fitjourney/exercises'
+    media_file_name = f'file_{exercise_id}_' + media_file.filename
+    print(media_file_name)
+    file_path = f"{directory_path}/{media_file_name}"
+    # Ensure the directory exists
+    os.makedirs(directory_path, exist_ok=True)
+    # Save the file to the temp folder
+    media_file.save(file_path)
+
+    # Upload the file to Google Drive
+    default_exercises_folder = drive.default_exercises_folder
+
+    file_id, file_url = drive.find_file_id(media_file_name, default_exercises_folder)
+    if file_id:
+        os.remove(file_path)
+        return abort(400, description=f"Bad Request: File already exists {file_url.split('&')[0]}")
+
+    file_id, supported_file_type, web_content_link = drive.upload_file(file_path, default_exercises_folder)
+    os.remove(file_path)
+
+    if not supported_file_type:
+        return abort(400, description="Bad Request: Unsupported file type")
+
+    if web_content_link:
+        web_content_link = web_content_link.split("&")[0]
+    else:
+        return abort(500, description="Internal Server Error: An error occurred while uploading the file")
+    
+    # Delete the old media file
+    old_media_file_url = exercise.media_file_url
+    if old_media_file_url:
+        try:
+            result, message = drive.delete_file(webContentLink=old_media_file_url)
+            print(result, message)
+            # if google drive return false, the file is not in drive
+            exercise.media_file_url = None
+
+        except Exception as e:
+            return abort(500, description=f"Internal Server Error: {e}")
+    
+    # Update the media_file_url in the database
+    exercise.media_file_url = web_content_link
+    db.session.commit()
+    return jsonify({"message": f"The exercise media has been updated successfully {web_content_link}"}), 200
+
+
+@views_bp.route('/exercises/<int:exercise_id>/delete_media', methods=['DELETE'], strict_slashes=False)
+def delete_exercise_media(exercise_id):
+    """ Delete the media file for the exercise """
+
+    exercise = db.session.get(Exercise, exercise_id)
+
+    if exercise is None:
+        return abort(404, description="Exercise not found")
+
+    # Check if the exercise has a media file
+    if exercise.media_file_url is None:
+        return abort(404, description="Media file not found")
+
+    media_file_url = exercise.media_file_url
+    try:
+        result, message = drive.delete_file(webContentLink=media_file_url)
+        print(result, message)
+        if result is True:
+            exercise.media_file_url = None
+            db.session.commit()
+            return jsonify({"message": message}), 200
+        
+        # if google drive return false, the file is not in drive
+        exercise.media_file_url = None
+        db.session.commit()
+        return jsonify({"message": "media file deleted successfully"}), 200
+    except Exception as e:
+        return abort(500, description=f"Internal Server Error: {e}")

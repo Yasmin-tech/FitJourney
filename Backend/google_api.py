@@ -2,7 +2,7 @@
 """ Access Google Drive API """
 from google.oauth2 import service_account
 from googleapiclient.discovery import build, MediaFileUpload
-from googleapiclient.errors import HttpError
+from googleapiclient.errors import HttpError, UnknownFileType
 import os
 import urllib.parse
 
@@ -18,18 +18,18 @@ credentials = service_account.Credentials.from_service_account_file(
 service = build('drive', 'v3', credentials=credentials)
 
 # Test connection to the Google Drive API
-# def list_drive_files(service):
-#     results = service.files().list(pageSize=10, fields="nextPageToken, files(id, name)").execute()
-#     items = results.get('files', [])
+def list_drive_files(service):
+    results = service.files().list(pageSize=10, fields="nextPageToken, files(id, name)").execute()
+    items = results.get('files', [])
 
-#     if not items:
-#         print('No files found.')
-#     else:
-#         print('Files:')
-#         for item in items:
-#             print(f"{item['name']} ({item['id']})")
+    if not items:
+        print('No files found.')
+    else:
+        print('Files:')
+        for item in items:
+            print(f"{item['name']} ({item['id']})")
 
-# # Call the function to list files
+# Call the function to list files
 # list_drive_files(service)
 
 class ManageDrive:
@@ -38,6 +38,7 @@ class ManageDrive:
         self.service = service
         self.root_folder_id = self.find_folder_id('FitJourney')
         self.users_folder_id = self.find_folder_id('Users', self.root_folder_id)
+        self.default_exercises_folder = self.find_folder_id("default_exercises", self.root_folder_id)
 
     def find_folder_id(self, folder_name, parent_id=None):
         """ Find a folder by name and return the folder id """
@@ -50,7 +51,7 @@ class ManageDrive:
             results = self.service.files().list(q=query, spaces='drive', fields="files(id, name)").execute()
             items = results.get('files', [])
             if not items:
-                print(f"Folder '{folder_name}' not found.")
+                # print(f"Folder '{folder_name}' not found.")
                 return None
             return items[0]['id']
         except HttpError as e:
@@ -70,7 +71,7 @@ class ManageDrive:
             folder = self.service.files().create(body=file_metadata, fields='id').execute()
             return folder.get('id')
         except HttpError as e:
-            print(f"An error occurred while creating folder '{folder_name}': {e}")
+            # print(f"An error occurred while creating folder '{folder_name}': {e}")
             return None
 
     def find_file_id(self, file_name, parent_id=None):
@@ -84,13 +85,13 @@ class ManageDrive:
             results = self.service.files().list(q=query, spaces='drive', fields="files(id, name, webContentLink)").execute()
             items = results.get('files', [])
             if not items:
-                print(f"File '{file_name}' not found.")
+                # print(f"File '{file_name}' not found.")
                 return None, None
             return items[0]['id'], items[0]['webContentLink']
         
         except HttpError as e:
             print(f"An error occurred while finding file '{file_name}': {e}")
-            return None
+            return None, None
 
     def upload_file(self, file_name, folder_id):
         """ Upload a file """
@@ -104,17 +105,19 @@ class ManageDrive:
                 body=file_metadata,
                 media_body=file_name,
                 fields='id, webViewLink, webContentLink').execute()
-            # print(f"File '{file_name}' uploaded successfully with ID: {file.get('id')}")
+            print(f"File '{file_name}' uploaded successfully with ID: {file.get('id')}")
     
             # Set file permissions to be accessible by anyone with the link
             permission = { 'type': 'anyone', 'role': 'reader' }
             self.service.permissions().create( fileId=file.get('id'), body=permission ).execute()
             # print(f"Permissions set for file ID: {file.get('id')}")
         
-            return file.get('id'), file.get('webViewLink'), file.get('webContentLink')
-        except HttpError as e:
+            return file.get('id'), True, file.get('webContentLink')
+        except (HttpError, UnknownFileType) as e:
             print(f"An error occurred while uploading file '{file_name}': {e}")
-            return None
+            if isinstance(e, UnknownFileType):
+                return None, False, None
+            return None, True, None
 
     def list_files(self):
         """ List files in Google Drive """
@@ -146,10 +149,12 @@ class ManageDrive:
                 if webContentLink:
                     # extract the file id from the webContentLink
                     url_parsed = urllib.parse.urlparse(webContentLink)
-                    id = urllib.parse.parse_qs(url_parsed.query)['id'][0]
+                    id = urllib.parse.parse_qs(url_parsed.query).get("id", None)
+                    if not id:
+                        return False, 'Invalid webContentLink provided'
                 else:
                     return False, 'No file id or webContentLink provided'
-            self.service.files().delete(fileId=id).execute()
+            self.service.files().delete(fileId=id[0]).execute()
             return True, 'File deleted successfully'
         except HttpError as e:
             return False, f"An error occurred while deleting file: {e}"

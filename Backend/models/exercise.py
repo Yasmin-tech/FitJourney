@@ -25,8 +25,7 @@ class Exercise(BaseModel, db.Model):
     category: Mapped[str] = db.mapped_column(String(128), nullable=False)
     muscle_group: Mapped[str] = db.mapped_column(String(128), nullable=False)
     equipment: Mapped[str] = db.mapped_column(String(128), nullable=True)
-    video_url: Mapped[Optional[str]] = db.mapped_column(String(255), nullable=True)
-    img_url: Mapped[Optional[str]] = db.mapped_column(String(255), nullable=True)
+    media_file_url: Mapped[Optional[str]] = db.mapped_column(String(255), nullable=True)
     workout_sessions: Mapped[List["WorkoutSession"]] = relationship("WorkoutSession", secondary="workout_sessions_exercises", back_populates="exercises")
     records: Mapped[List["Record"]] = relationship("Record", back_populates="exercise")
 
