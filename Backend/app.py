@@ -25,7 +25,6 @@ def setup_user_and_database():
 
 
 from flask import Flask
-from mega import Mega
 from models.base import db
 from config import Config
 from flask_migrate import Migrate
