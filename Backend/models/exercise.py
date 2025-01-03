@@ -21,7 +21,7 @@ class Exercise(BaseModel, db.Model):
         primary_key=True,
         autoincrement=True)
     title: Mapped[str] = db.mapped_column(String(128), nullable=False)
-    description: Mapped[str] = db.mapped_column(String(255), nullable=True)
+    description: Mapped[str] = db.mapped_column(String(1024), nullable=True)
     category: Mapped[str] = db.mapped_column(String(128), nullable=False)
     muscle_group: Mapped[str] = db.mapped_column(String(128), nullable=False)
     equipment: Mapped[str] = db.mapped_column(String(128), nullable=True)

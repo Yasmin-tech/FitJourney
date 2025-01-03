@@ -63,7 +63,7 @@ def create_user():
     user = db.session.execute(query).scalar()
 
     if user:
-        return abort(400, description="Bad Request: Email already in use")
+        return abort(409, description="Conflict: Email already in use")
     
     # Create a new user
     new_user = User(**data)
@@ -152,6 +152,9 @@ def get_profile_picture(user_id):
     
     # Return the profile picture as a json object
     return jsonify({"file_url": user.profile_picture})
+
+
+#--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
 
 
 @views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['POST'], strict_slashes=False)

@@ -319,17 +319,6 @@ def update_media(user_id, custom_exercise_id):
         os.remove(file_path)
         return abort(400, description=f"Bad Request: File already exists {file_url.split('&')[0]}")
 
-    # Delete the old media file
-    old_media_file_url = custom_exercise.media_file_url
-    if old_media_file_url:
-        try:
-            result, message = drive.delete_file(webContentLink=old_media_file_url)
-            print(result, message)
-            # if google drive return false, the file is not in drive
-            custom_exercise.media_file_url = None
-
-        except Exception as e:
-            return abort(500, description=f"Internal Server Error: {e}")
 
     file_id, supported_file_type, web_content_link = drive.upload_file(file_path, exercises_folder)
     os.remove(file_path)
@@ -342,6 +331,18 @@ def update_media(user_id, custom_exercise_id):
     else:
         return abort(500, description="Internal Server Error: An error occurred while uploading the file")
     
+     # Delete the old media file
+    old_media_file_url = custom_exercise.media_file_url
+    if old_media_file_url:
+        try:
+            result, message = drive.delete_file(webContentLink=old_media_file_url)
+            print(result, message)
+            # if google drive return false, the file is not in drive
+            custom_exercise.media_file_url = None
+
+        except Exception as e:
+            return abort(500, description=f"Internal Server Error: {e}")
+
     # Update the media_file_url in the database
     custom_exercise.media_file_url = web_content_link
     db.session.commit()
