@@ -8,9 +8,11 @@ from models.workout_session import WorkoutSession
 from models.workout_session import workout_sessions_custom_exercises
 from models.custom_exercise import CustomExercise
 from flask import request, jsonify, abort
+from flask_jwt_extended import jwt_required
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/custom_exercises', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_workout_session_custom_exercises(workout_session_id):
     """ Retrieve all the custom exercises for a specific workout session """
     workout_session = db.session.get(WorkoutSession, workout_session_id)
@@ -23,6 +25,7 @@ def get_workout_session_custom_exercises(workout_session_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/custom_exercises/<int:custom_exercise_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_one_workout_session_custom_exercise(workout_session_id, custom_exercise_id):
     """ Retrieve a single custom exercise for a specific workout session """
     workout_session = db.session.get(WorkoutSession, workout_session_id)
@@ -41,6 +44,7 @@ def get_one_workout_session_custom_exercise(workout_session_id, custom_exercise_
 @views_bp.route(
     '/workout_sessions/<int:workout_session_id>/custom_exercises/<int:custom_exercise_id>/workout_sessions_custom_exercises',
     methods=['POST'], strict_slashes=False)
+@jwt_required()
 def link_workout_sessions_to_custom_exercises(workout_session_id, custom_exercise_id):
     """ Link a workout session to a custom exercise """
 
@@ -62,6 +66,7 @@ def link_workout_sessions_to_custom_exercises(workout_session_id, custom_exercis
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/custom_exercises', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_workout_session_custom_exercises(workout_session_id):
     """ Update the custom exercises for a specific workout session 
         with a new list of custom exercises """
@@ -89,6 +94,7 @@ def update_workout_session_custom_exercises(workout_session_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/custom_exercises/<int:custom_exercise_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def unlink_workout_sessions_to_custom_exercises(workout_session_id, custom_exercise_id):
     """ Unlink a workout session from a custom exercise """
 

@@ -9,9 +9,12 @@ from models.user import User
 from models.exercise import Exercise
 from models.custom_exercise import CustomExercise
 from flask import request, jsonify, abort, url_for
+from flask_jwt_extended import jwt_required
+from decorators import roles_required
 
 
 @views_bp.route('/records', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_records():
     """ Get all the records """
     query = db.select(Record)
@@ -24,6 +27,7 @@ def get_records():
 
 
 @views_bp.route('/records/<int:record_id>', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_one_record(record_id):
     """ Get a single record """
     record = db.session.get(Record, record_id)
@@ -35,6 +39,7 @@ def get_one_record(record_id):
 
 
 @views_bp.route('/users/<int:user_id>/records', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_user_records(user_id):
     """ Get all the records from a specific user """
 
@@ -46,6 +51,7 @@ def get_user_records(user_id):
 
 
 @views_bp.route('/users/<int:user_id>/records/<int:record_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_one_record_from_user(user_id, record_id):
     """ Get a single record from a specific user """
 
@@ -63,6 +69,7 @@ def get_one_record_from_user(user_id, record_id):
 
 
 @views_bp.route('/users/<int:user_id>/records', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def create_record_for_user(user_id):
     """ Create a new record for a specific user """
 
@@ -110,6 +117,7 @@ def create_record_for_user(user_id):
 
 
 @views_bp.route('users/<int:user_id>/records/<int:record_id>', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_record(user_id, record_id):
     """ Update an existing record """
 
@@ -152,6 +160,7 @@ def update_record(user_id, record_id):
 
 
 @views_bp.route('users/<int:user_id>/records/<int:record_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def remove_record(user_id, record_id):
     """ Delete a record from the database of a specific user """
 

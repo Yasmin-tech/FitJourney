@@ -6,9 +6,12 @@ from models.base import db
 from models.workout_session import WorkoutSession
 from models.day import Day
 from flask import request, jsonify, abort, url_for
+from flask_jwt_extended import jwt_required
+from decorators import roles_required
 
 
 @views_bp.route('/workout_sessions', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_all_workout_sessions():
     """ Retrieve all the workout_sessions from the database """
     query = db.select(WorkoutSession)
@@ -21,6 +24,7 @@ def get_all_workout_sessions():
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_one_workout_session(workout_session_id):
     """ Retrieve a single workout_session from the database """
     workout_session = db.session.get(WorkoutSession, workout_session_id)
@@ -32,6 +36,7 @@ def get_one_workout_session(workout_session_id):
 
 
 @views_bp.route('/days/<int:day_id>/workout_sessions', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_day_workout_sessions(day_id):
     """ Retrieve all the workout_sessions for a specific day """
     day = db.session.get(Day, day_id)
@@ -43,6 +48,7 @@ def get_day_workout_sessions(day_id):
     return jsonify([workout_session.to_dict() for workout_session in workout_sessions]), 200
 
 @views_bp.route('/days/<int:day_id>/workout_sessions/<int:workout_session_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_day_workout_session(day_id, workout_session_id):
     """ Retrieve a single workout_session for a specific day """
     day = db.session.get(Day, day_id)
@@ -60,6 +66,7 @@ def get_day_workout_session(day_id, workout_session_id):
 
 
 @views_bp.route('/days/<int:day_id>/workout_sessions', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def create_day_workout_session(day_id):
     """ Create a new workout_session for a specific day """
     day = db.session.get(Day, day_id)
@@ -91,6 +98,7 @@ def create_day_workout_session(day_id):
 
 
 @views_bp.route('/days/<int:day_id>/workout_sessions/<int:workout_session_id>', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_day_workout_session(day_id, workout_session_id):
     """ Update a workout_session for a specific day """
 
@@ -123,6 +131,7 @@ def update_day_workout_session(day_id, workout_session_id):
 
 
 @views_bp.route('/days/<int:day_id>/workout_sessions/<int:workout_session_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def remove_day_workout_session(day_id, workout_session_id):
     """ Remove a workout_session for a specific day """
 

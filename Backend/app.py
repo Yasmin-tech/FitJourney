@@ -55,33 +55,41 @@ migrate = Migrate(app, db)
 
 # Aautomatically create the Admin role when the Flask app starts
 def setup_admin_role():
+
+    admin_email = os.getenv("ADMIN_EMAIL")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+
+    # Debugging statements to check environment variables
+    print(f"ADMIN_EMAIL: {admin_email}")
+    print(f"ADMIN_PASSWORD: {admin_password}")
+    
+    if not admin_email or not admin_password:
+        print("Environment variables for Admin email and/or password are not set.")
+        raise SystemExit("Error: Environment variables for Admin email and/or password are not set.")
+
     admin_role = Role.find_role_by_name("Admin")
-    if not admin_role:
-        admin_email = os.getenv("ADMIN_EMAIL")
-        admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_user = User.find_user_by_email(admin_email)
+    if not admin_role or not admin_user:
 
-        # Debugging statements to check environment variables
-        print(f"ADMIN_EMAIL: {admin_email}")
-        print(f"ADMIN_PASSWORD: {admin_password}")
-        
-        if not admin_email or not admin_password:
-            print("Environment variables for Admin email and/or password are not set.")
-            return
+        if not admin_role:
+            admin_role = Role(name="Admin")
+            db.session.add(admin_role)
+            db.session.commit()
+            print("Admin role created successfully.")
 
-        admin_role = Role(name="Admin")
-        db.session.add(admin_role)
-        db.session.commit()
-
-        admin_user = User(
-            first_name="Admin",
-            last_name="Admin",
-            email=os.getenv("ADMIN_EMAIL"),
-            password=os.getenv("ADMIN_PASSWORD")
-        )
+        if not admin_user:
+            admin_user = User(
+                first_name="Admin",
+                last_name="Admin",
+                email=os.getenv("ADMIN_EMAIL"),
+                password=os.getenv("ADMIN_PASSWORD")
+            )
         admin_user.roles.append(admin_role)
         db.session.add(admin_user)
         db.session.commit()
-        print("Admin role created successfully.")
+        print("Admin role is assigned to the Admin user.")
+    else:
+        print("Admin role already exists.")
 
 with app.app_context():
     setup_user_and_database()

@@ -7,9 +7,12 @@ from models.base import db
 from models.day import Day
 from models.plan import Plan
 from flask import request, jsonify, abort
+from flask_jwt_extended import jwt_required
+from decorators import roles_required
 
 
 @views_bp.route('/days', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_all_days():
     """ Retrieve all the days from the database """
     query = db.select(Day)
@@ -22,6 +25,7 @@ def get_all_days():
 
 
 @views_bp.route('/days/<int:day_id>', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_one_day(day_id):
     """ Retrieve a single day from the database """
     day = db.session.get(Day, day_id)
@@ -33,6 +37,7 @@ def get_one_day(day_id):
 
 
 @views_bp.route('/plans/<int:plan_id>/days', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_all_days_for_plan(plan_id):
     """ Retrieve all the days for a specific plan """
     plan = db.session.get(Plan, plan_id)
@@ -50,6 +55,7 @@ def get_all_days_for_plan(plan_id):
 
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_one_day_for_plan(plan_id, day_id):
     """ Retrieve a single day for a specific plan """
     plan = db.session.get(Plan, plan_id)
@@ -68,6 +74,7 @@ def get_one_day_for_plan(plan_id, day_id):
 
 
 @views_bp.route('/plans/<int:plan_id>/days', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def create_one_day_for_plan(plan_id):
     """ Create a new day for a specific plan """
 
@@ -99,6 +106,7 @@ def create_one_day_for_plan(plan_id):
 
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_day_for_plan(plan_id, day_id):
     """ Update a single day for a specific plan """
 
@@ -133,6 +141,7 @@ def update_day_for_plan(plan_id, day_id):
 
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def remove_day_from_plan(plan_id, day_id):
     """ Remove a single day from a specific plan """
 
