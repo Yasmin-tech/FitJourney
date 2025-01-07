@@ -7,6 +7,7 @@
 
 import pandas as pd
 import requests
+import sys
 
 
 # Read the CSV file
@@ -17,6 +18,9 @@ df.fillna('', inplace=True)
 
 # Endpoint URL
 url = 'http://localhost:5001/api/v1/exercises'
+Authorization = sys.argv[1]
+headers = {"Authorization": "Bearer " + Authorization, 
+           "Content-Type": "application/json"}
 
 # Send a GET request to the endpoint
 # response = requests.get(url)
@@ -37,7 +41,7 @@ def send_post_request():
             'equipment': row['equipment']
         }
         # if the status code is not 201 or not 409, print the response and break the loop
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, headers=headers)
         if response.status_code != 201 and response.status_code != 409:
             print(f"Error: {response.text}")
             break

@@ -8,9 +8,11 @@ from models.workout_session import WorkoutSession
 from models.workout_session import workout_sessions_exercises
 from models.exercise import Exercise
 from flask import request, jsonify, abort
+from flask_jwt_extended import jwt_required
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/exercises', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_workout_session_exercises(workout_session_id):
     """ Retrieve all the exercises for a specific workout session """
     workout_session = db.session.get(WorkoutSession, workout_session_id)
@@ -23,6 +25,7 @@ def get_workout_session_exercises(workout_session_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/exercises/<int:exercise_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_one_workout_session_exercise(workout_session_id, exercise_id):
     """ Retrieve a single exercise for a specific workout session """
     workout_session = db.session.get(WorkoutSession, workout_session_id)
@@ -40,6 +43,7 @@ def get_one_workout_session_exercise(workout_session_id, exercise_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/exercises/<int:exercise_id>/workout_sessions_exercises', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def link_workout_sessions_to_exercises(workout_session_id, exercise_id):
     """ Link a workout session to an exercise """
 
@@ -61,6 +65,7 @@ def link_workout_sessions_to_exercises(workout_session_id, exercise_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/exercises', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_workout_session_exercises(workout_session_id):
     """ Update the exercises for a specific workout session 
         with a new list of exercises """
@@ -87,6 +92,7 @@ def update_workout_session_exercises(workout_session_id):
 
 
 @views_bp.route('/workout_sessions/<int:workout_session_id>/exercises/<int:exercise_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def unlink_workout_sessions_to_exercises(workout_session_id, exercise_id):
     """ Unlink a workout session from an exercise """
 

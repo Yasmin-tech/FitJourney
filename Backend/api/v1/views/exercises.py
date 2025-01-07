@@ -8,11 +8,14 @@ from models.exercise import Exercise
 from flask import request, jsonify, abort, url_for
 import os
 from google_api import ManageDrive
+from decorators import roles_required
+
 
 drive = ManageDrive()
 
 
 @views_bp.route('/exercises', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_all_exercises():
     """ Retrieve all the exercises from the database """
     query = db.select(Exercise)
@@ -25,6 +28,7 @@ def get_all_exercises():
 
 
 @views_bp.route('/exercises/<int:exercise_id>', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_one_exercise(exercise_id):
     """ Retrieve a single exercise from the database """
     exercise = db.session.get(Exercise, exercise_id)
@@ -36,6 +40,7 @@ def get_one_exercise(exercise_id):
 
 
 @views_bp.route('/exercises', methods=['POST'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def create_exercise():
     """ Create a new exercise """
     
@@ -68,6 +73,7 @@ def create_exercise():
 
 
 @views_bp.route('/exercises/<int:exercise_id>', methods=['PUT'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def update_exercise(exercise_id):
     """ Update an existing exercise """
     
@@ -95,6 +101,7 @@ def update_exercise(exercise_id):
 
 
 @views_bp.route('/exercises/<int:exercise_id>', methods=['DELETE'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def delete_exercise(exercise_id):
     """ Delete an exercise from the database """
     
@@ -113,6 +120,7 @@ def delete_exercise(exercise_id):
 # -----Manage uploading, updating and deleting exercises images and videos in google drive----------------------
 
 @views_bp.route('/exercises/<int:exercise_id>/media_file', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_exercise_media_file(exercise_id):
     """ Retrieve the media file stored as url for the exercise """
     
@@ -131,6 +139,7 @@ def get_exercise_media_file(exercise_id):
 
 
 @views_bp.route('/exercises/<int:exercise_id>/upload_media', methods=['POST'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def upload_exercise_media(exercise_id):
     """ Upload the media for the exercise to Google Drive """
 
@@ -196,6 +205,7 @@ def upload_exercise_media(exercise_id):
 
 
 @views_bp.route('/exercises/<int:exercise_id>/update_media', methods=['PUT'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def update_exercise__media(exercise_id):
     """ Update the media for the exercises """
     exercise = db.session.get(Exercise, exercise_id)
@@ -281,6 +291,7 @@ def update_exercise__media(exercise_id):
 
 
 @views_bp.route('/exercises/<int:exercise_id>/delete_media', methods=['DELETE'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def delete_exercise_media(exercise_id):
     """ Delete the media file for the exercise """
 

@@ -34,6 +34,7 @@ def get_all_users():
 
 
 @views_bp.route('/users/<int:user_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_one_user(user_id):
     """ Retrieve a single user from the database """
     user = db.session.get(User, user_id)
@@ -45,6 +46,7 @@ def get_one_user(user_id):
 
 
 @views_bp.route('/users', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def create_user():
     """ Create a new user """
    
@@ -85,6 +87,7 @@ def create_user():
 
 
 @views_bp.route("/users/<int:user_id>", methods=["PUT"], strict_slashes=False)
+@jwt_required()
 def update_user(user_id):
     """Update a user object"""
 
@@ -119,6 +122,7 @@ def update_user(user_id):
 
 
 @views_bp.route("/users/<int:user_id>", methods=["DELETE"], strict_slashes=False)
+@jwt_required()
 def remove_user(user_id):
     """Remove a user object"""
 
@@ -144,8 +148,22 @@ def remove_user(user_id):
     return jsonify({"message": "User deleted successfully"}), 200
 
 
+# Endpoint to get all roles of a user
+@views_bp.route('/users/<int:user_id>/roles', methods=['GET'], strict_slashes=False)
+@roles_required("Developer", "Admin")
+def get_user_roles(user_id):
+    user = db.session.get(User, user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user_roles = [role.to_dict() for role in user.roles]
+    return jsonify(user_roles), 200
+
+
 # Endpoint to assign a role to a user
 @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
+@roles_required("Admin")
 def assign_role(user_id, role_name):
     user = db.session.get(User, user_id)
     role = Role.find_role_by_name(role_name)
@@ -158,7 +176,11 @@ def assign_role(user_id, role_name):
     return jsonify({"message": "Role assigned successfully"}), 201
 
 
+
+#--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
+
 @views_bp.route('/users/<int:user_id>/profile_picture', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_profile_picture(user_id):
     """ Retrieve the profile picture for the user """
     user = db.session.get(User, user_id)
@@ -171,13 +193,11 @@ def get_profile_picture(user_id):
         return abort(404, description="Profile picture not found")
     
     # Return the profile picture as a json object
-    return jsonify({"file_url": user.profile_picture})
-
-
-#--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
+    return jsonify({"file_url": user.profile_picture}), 200
 
 
 @views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def upload_profile_picture(user_id):
     """ Upload a profile picture for the user """
     user = db.session.get(User, user_id)
@@ -248,6 +268,7 @@ def upload_profile_picture(user_id):
 
 
 @views_bp.route('/users/<int:user_id>/update_profile_picture', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_profile_picture(user_id):
     """ Update the profile picture for the user """
     user = db.session.get(User, user_id)
@@ -299,6 +320,7 @@ def update_profile_picture(user_id):
 
 
 @views_bp.route('/users/<int:user_id>/delete_profile_picture', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def delete_profile_picture(user_id):
     """ Delete the profile picture for the user """
 

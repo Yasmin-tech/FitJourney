@@ -9,12 +9,15 @@ from models.user import User
 from flask import request, jsonify, abort, url_for
 from google_api import ManageDrive
 import os
+from flask_jwt_extended import jwt_required
+from decorators import roles_required
 
 
 drive = ManageDrive()
 
 
 @views_bp.route('/custom_exercises', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_all_custom_exercises():
     """ Retrieve all the custom exercises from the database """
     query = db.select(CustomExercise)
@@ -27,6 +30,7 @@ def get_all_custom_exercises():
 
 
 @views_bp.route('/custom_exercises/<int:custom_exercise_id>', methods=['GET'], strict_slashes=False)
+@roles_required('Admin', 'Developer')
 def get_one_custom_exercise(custom_exercise_id):
     """ Retrieve a single custom_exercise from the database """
     custom_exercise = db.session.get(CustomExercise, custom_exercise_id)
@@ -38,6 +42,7 @@ def get_one_custom_exercise(custom_exercise_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_user_custom_exercises(user_id):
     """ Retrieve all the custom exercises from a specific user """
     user = db.session.get(User, user_id)
@@ -49,6 +54,7 @@ def get_user_custom_exercises(user_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_user_custom_exercise(user_id, custom_exercise_id):
     """ Retrieve a single custom_exercise from a specific user """
 
@@ -64,6 +70,7 @@ def get_user_custom_exercise(user_id, custom_exercise_id):
     return jsonify(custom_exercise.to_dict()), 200
 
 @views_bp.route('/users/<int:user_id>/custom_exercises', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def create_exercise_fot_user(user_id):
     """ Create a new exercise for a specific user """
     
@@ -100,6 +107,7 @@ def create_exercise_fot_user(user_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_custom_exercise(user_id, custom_exercise_id):
     """ Update an existing exercise """
     
@@ -129,6 +137,7 @@ def update_custom_exercise(user_id, custom_exercise_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def delete_custom_exercise(user_id, custom_exercise_id):
     """ Delete the custom_exercise from the database """
     
@@ -152,6 +161,7 @@ def delete_custom_exercise(user_id, custom_exercise_id):
 # -----Manage uploading, updating and deleting exercises images and videos in google drive----------------------
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>/media_file', methods=['GET'], strict_slashes=False)
+@jwt_required()
 def get_custom_exercise_media_file(user_id, custom_exercise_id):
     """ Retrieve the media file stored as a url for the exercise """
     user = db.session.get(User, user_id)
@@ -174,6 +184,7 @@ def get_custom_exercise_media_file(user_id, custom_exercise_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>/upload_media', methods=['POST'], strict_slashes=False)
+@jwt_required()
 def upload_media(user_id, custom_exercise_id):
     """ Upload the media for the custom_exercise to Google Drive """
     
@@ -256,6 +267,7 @@ def upload_media(user_id, custom_exercise_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>/update_media', methods=['PUT'], strict_slashes=False)
+@jwt_required()
 def update_media(user_id, custom_exercise_id):
     """ Update the media for the custom_exercise """
     # Check if the user exists
@@ -350,6 +362,7 @@ def update_media(user_id, custom_exercise_id):
 
 
 @views_bp.route('/users/<int:user_id>/custom_exercises/<int:custom_exercise_id>/delete_media', methods=['DELETE'], strict_slashes=False)
+@jwt_required()
 def delete_media(user_id, custom_exercise_id):
     """ Delete the media file for the exercise """
 

@@ -1,10 +1,6 @@
-#!/usr/bin/env python3
-""" Decorators for the Flask app """
-
-
 from functools import wraps
-from flask import jsonify
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask import jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user import User
 
 
@@ -13,11 +9,18 @@ def roles_required(*roles):
         @wraps(f)
         @jwt_required()
         def decorated_function(*args, **kwargs):
+            auth_header = request.headers.get('Authorization', None)
+            if not auth_header:
+                return jsonify({"message": "Authorization header is missing."}), 401
+
             current_user_email = get_jwt_identity()
             user = User.find_user_by_email(current_user_email)
 
-            if not user or not any(role.name in roles for role in user.roles):
-                return jsonify({"message": "Access forbidden: Insufficient permissions"}), 403
+            if not user:
+                return jsonify({"message": "User not found."}), 404
+
+            if not any(role.name in roles for role in user.roles):
+                return jsonify({"message": f"Access forbidden: User does not have the required roles {roles}."}), 403
 
             return f(*args, **kwargs)
         return decorated_function
