@@ -6,17 +6,22 @@ from . import views_bp
 from models.base import db
 from models.user import User
 from models.plan import Plan
+from models.role import Role
 from models.custom_exercise import CustomExercise
 from models.record import Record
 from flask import request, jsonify, abort, url_for
 from google_api import ManageDrive
 import os
+from flask_jwt_extended import jwt_required
+from decorators import roles_required
+
 
 
 drive = ManageDrive()
 
 
 @views_bp.route('/users', methods=['GET'], strict_slashes=False)
+@roles_required("Developer", "Admin")
 def get_all_users():
     """ Retrieve all the users from the database """
     query = db.select(User)
@@ -66,6 +71,7 @@ def create_user():
         return abort(409, description="Conflict: Email already in use")
     
     # Create a new user
+    print(type(data["password"]))
     new_user = User(**data)
     # new_user.password = data["password"]  # Hash the password
 
@@ -136,6 +142,20 @@ def remove_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": "User deleted successfully"}), 200
+
+
+# Endpoint to assign a role to a user
+@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
+def assign_role(user_id, role_name):
+    user = db.session.get(User, user_id)
+    role = Role.find_role_by_name(role_name)
+
+    if not user or not role:
+        return jsonify({"message": "User or Role not found"}), 404
+
+    user.roles.append(role)
+    db.session.commit()
+    return jsonify({"message": "Role assigned successfully"}), 201
 
 
 @views_bp.route('/users/<int:user_id>/profile_picture', methods=['GET'], strict_slashes=False)

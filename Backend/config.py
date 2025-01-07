@@ -8,6 +8,7 @@
 from dotenv import load_dotenv
 from os import getenv
 import subprocess
+from datetime import timedelta
 
 
 load_dotenv()  # Load environment variables from .env file
@@ -32,3 +33,8 @@ class Config():
             MYSQL_PASSWORD,
             MYSQL_HOST,
             MYSQL_DB)
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = False
+    SECRET_KEY = getenv("SECRET_KEY")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
