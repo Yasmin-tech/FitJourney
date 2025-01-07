@@ -29,6 +29,7 @@ class User(BaseModel, db.Model):
     plans: Mapped[List["Plan"]] = relationship("Plan", back_populates="user", cascade="all, delete-orphan")
     custom_exercises: Mapped[List["CustomExercise"]] = relationship("CustomExercise", back_populates="user", cascade="all, delete-orphan")
     records: Mapped[List["Record"]] = relationship("Record", back_populates="user", cascade="all, delete-orphan")
+    roles: Mapped[List["Role"]] = relationship("Role", secondary="user_roles", back_populates="users")
     created_at: Mapped[datetime] = db.mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -56,3 +57,16 @@ class User(BaseModel, db.Model):
         new_dict = super().to_dict()
         del new_dict["password_hashed"]
         return new_dict
+    
+    def is_admin(self):
+        # Check if the user is an admin
+        return any([role.name == "Admin" for role in self.roles])
+
+    @classmethod
+    def find_user_by_email(cls, email):
+        """
+            Find a user by email
+            """
+        query = db.select(cls).where(cls.email == email)
+        user = db.session.execute(query).scalar_one_or_none()
+        return user
