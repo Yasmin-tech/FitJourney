@@ -1,0 +1,968 @@
+openapi: 3.0.3
+info:
+  title: FitJourney API
+  description: >
+    FitJourney API is designed to manage fitness plans, exercises, and workout sessions. 
+    This API provides endpoints for user management, authentication, fitness record tracking, 
+    exercise routines, and fitness plans.
+
+
+    **Key Features**:
+
+    - **User Management**: Create, update, and delete user profiles.
+
+    - **Authentication**: Securely authenticate users and manage tokens.
+
+    - **Fitness Records**: Track user progress and fitness records over time.
+
+    - **Exercise Routines**: Manage and retrieve information about exercises.
+
+    - **Fitness Plans**: Create and manage personalized fitness plans.
+
+
+    **How to Use the API**:
+
+    - **Users**: Manage user information and profiles with endpoints in the `users` tag.
+
+    - **Auth**: Use the `auth` endpoints for login, registration, and token management.
+
+    - **Records**: Track and retrieve fitness records using the `records` endpoints.
+
+
+    - **Exercises**: Access detailed information about exercises with the `exercises` endpoints.
+
+    - **Plans**: Create and manage fitness plans using the `plans` endpoints.
+
+  version: 1.0.0
+  termsOfService: https://opensource.org/licenses/MIT
+  contact:
+    name: Your Name
+    url: http://your-website.com
+    email: your-email@example.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:5000/api/v1
+    description: APIs endpoint for development
+  - url: http://localhost:5000/auth
+    description: Authentication and authorization endpoints
+tags:
+  - name: auth
+    description: Authentication and authorization endpoints
+  - name: users
+    description: Operations related to users
+  - name: roles
+    description: Operations related to managing roles
+  - name: records
+    description: Operations related to records
+  - name: exercises
+    description: Operations related to exercises
+  - name: custom exercises
+    description: Operations related to custom exercises created by the user
+  - name: plans
+    description: Operations related to fitness plans
+  - name: days
+    description: Operations related to planning the exercise days based on the plan
+  - name: workouts
+    description: Operations related to workout sessions
+  - name: workout exercises
+    description: Operations related to managing the exercises in a workout session
+  - name: workout custom exercises
+    description: Operations related to managing the custom exercises of a user in a workout session
+paths:
+  /signup:
+    post:
+      tags:
+        - auth
+      summary: Sign up a new user
+      description: Sign up a new user with the provided details
+      operationId: signUp
+      servers:
+        - url: http://localhost:5000/auth
+      requestBody:
+        description: User details for sign up
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  first_name:
+                    type: string
+                    description: User's first name
+                    example: John
+                  last_name:
+                    type: string
+                    description: User's last name
+                    example: Doe
+                  email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: johndoe@mail.com
+                  password:
+                    type: string
+                    description: User's password
+                    example: john123
+        required: true
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+                  new_user: 
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: Unique identifier for the user
+                        example: 1
+                      first_name:
+                        type: string
+                        description: User's first name
+                        example: John
+                      last_name:
+                        type: string
+                        description: User's last name
+                        example: Doe
+                      email:
+                        type: string
+                        format: email
+                        description: User's email address
+                        example: johndoe@mail.com
+                      profile_picture:
+                        type: string
+                        description: URL of the user's profile picture
+                      created_at:
+                        type: string
+                        format: date-time
+                        description: Timestamp when the user was created
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Missing fields in request
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User already exists
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /login:
+    post:
+      tags:
+        - auth
+      summary: Log in a user
+      description: Log in a user with the provided email and password
+      operationId: logIn
+      servers:
+        - url: http://localhost:5000/auth
+      requestBody:
+        description: User credentials for login
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: johndoe@gmail.com
+                password:
+                  type: string
+                  description: User's password
+                  example: john123
+        required: true
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT token for authenticated user
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+                  refresh_token:
+                    type: string
+                    description: JWT token for refreshing the access token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+                  message:
+                    type: string
+                    example: User logged in successfully
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: Unique identifier for the user
+                        example: 1
+                      first_name:
+                        type: string
+                        description: User's first name
+                        example: John
+                      last_name:
+                        type: string
+                        description: User's last name
+                        example: Doe
+                      email:
+                        type: string
+                        format: email
+                        description: User's email address
+                        example: johndoe@mail.com
+                      profile_picture:
+                        type: string
+                        description: URL of the user's profile picture
+                      created_at:
+                        type: string
+                        format: date-time
+                        description: Timestamp when the user was created
+        '400':
+            description: Missing fields in request
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: Missing fields in request
+        '404':
+          description: There is no user with the provided email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User does not exist
+        '401':
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized, Invalid password
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/login:
+    post:
+      tags:
+        - auth
+      summary: Log in an admin user
+      description: Log in an admin user with the provided email and password
+      operationId: logInAdmin
+      servers:
+        - url: http://localhost:5000/auth
+      requestBody:
+        description: Admin user credentials for login
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Admin user's email address
+                  example: admin@mail.com
+                password:
+                  type: string
+                  description: Admin user's password
+                  example: admin123
+        required: true
+      responses:
+        '200':
+          description: Admin user logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT token for authenticated admin user
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+                  refresh_token:
+                    type: string
+                    description: JWT token for refreshing the access token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+                  message:
+                    type: string
+                    example: Admin user logged in successfully
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: Unique identifier for the admin user
+                        example: 1
+                      first_name:
+                        type: string
+                        description: Admin user's first name
+                        example: John
+                      last_name:
+                        type: string
+                        description: Admin user's last name
+                        example: Doe
+                      email:
+                        type: string
+                        format: email
+                        description: Admin user's email address
+                        example: admin@mail.com
+                      profile_picture:
+                        type: string
+                        description: URL of the admin user's profile picture
+                      created_at:
+                        type: string
+                        format: date-time
+                        description: Timestamp when the admin user was created
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Missing fields in request
+        '404':
+          description: There is no user with the provided email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User does not exist
+        '403':
+          description: Unauthorized User is not an admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized, Insufficient permissions
+        '401':
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized, Invalid password
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/create_users_roles/{user_id}/{role_name}:
+    post:
+      tags:
+        - auth
+      summary: Create and assign a role to a user
+      description: Assign a specified role to a user by their ID
+      operationId: assignRoleToUser
+      servers:
+        - url: http://localhost:5000/auth
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: role_name
+          in: path
+          required: true
+          description: Name of the role to be assigned to the user
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Role created and assigned successfully to the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Role assigned successfully to the user
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /refresh:
+    description: Refresh the access token using the refresh token
+    post:
+      tags:
+        - auth
+      summary: Refresh access token
+      description: Refresh the access token using the provided refresh token
+      operationId: refreshToken
+      servers:
+        - url: http://localhost:5000/auth
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Refresh token for generating a new access token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: Refresh token for generating a new access token
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+        required: true
+      responses:
+        '200':
+          description: Access token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: New JWT token for authenticated user
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXUyJ9.eyJpZCI6MSwiZXhwIjoxNjg3MTU4MDQyfQ.7f5b
+        '401':
+          description: Unauthorized, invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users:
+    get:
+      tags:
+        - users
+      summary: Get all users
+      description: Retrieve a list of all users and their details in the system as json object
+      operationId: getAllUsers
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    message:
+                      type: string
+                      example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - users
+      summary: Create a new user
+      description: Create a new user with the provided details
+      operationId: createUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      requestBody:
+        description: User data for creating a new user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  first_name:
+                    type: string
+                    description: User's first name
+                    example: John
+                  last_name:
+                    type: string
+                    description: User's last name
+                    example: Doe
+                  email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: johndoe@example.com
+                  password:
+                    type: string
+                    description: User's password
+                    example: john123
+              required: true
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Missing fields in request
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Conflict, Email already in use
+  /users/{user_id}:
+    get:
+      tags:
+        - users
+      summary: Get a user by ID
+      description: Retrieve a user and their details by their ID
+      operationId: getUserById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a user's details by their ID
+      tags:
+        - users
+      summary: Update a user by ID
+      operationId: updateUserById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: User data for updating a user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                  first_name:
+                    type: string
+                    description: User's first name
+                    example: John
+                  last_name:
+                    type: string
+                    description: User's last name
+                    example: Doe
+                  old_password:
+                    type: string
+                    description: User's old password
+                    example: john123
+                  new_password:
+                    type: string
+                    description: User's new password
+                    example: john456
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '400':
+          description: Bad request, there is not json payload or old password is missing or incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad request
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - users
+      summary: Delete a user by ID
+      description: Delete a user by their ID
+      operationId: deleteUserById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '500':
+          description: Internal server error while handling deleting user's folder from google drive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/roles:
+    get:
+      tags:
+        - users
+      summary: Get all roles assigned to a user
+      description: Retrieve a list of all roles assigned to a user by their ID
+      operationId: getUserRoles
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of roles assigned to the user retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/roles/{role_name}:
+    post:
+      description: Assign a role to a user by their ID
+      tags:
+        - users
+      summary: Assign a role to a user
+      operationId: assignRoleToUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: role_name
+          in: path
+          required: true
+          description: Name of the role to be assigned to the user
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Role assigned successfully to the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Role assigned successfully
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties: 
+        error: 
+          type: string
+          description: General error message
+        details:
+          type: object
+          additionalProperties:
+            type: string
+          description: Detailed error
+    UnauthorizedResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: Missing Authorization Header
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user
+        first_name:
+          type: string
+          description: User's first name
+        last_name:
+          type: string
+          description: User's last name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        profile_picture:
+          type: string
+          description: URL of the user's profile picture
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the role
+        name:
+          type: string
+          description: Name of the role
+      example:
+        id: 7
+        name: Developer

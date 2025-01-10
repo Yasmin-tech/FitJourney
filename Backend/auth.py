@@ -28,13 +28,12 @@ def signup_user():
     if not data or not validate_signup_data(data):
         return jsonify({"message": "Missing fields in request"}), 400
 
-    response = requests.post('http://localhost:5001/api/v1/users', json=data)
+    response = requests.post('http://localhost:5000/api/v1/users', json=data)
     if response.status_code == 201:
         return jsonify({"message": "User created successfully", "new_user": response.json()}), 201
     if response.status_code == 409:
-        return jsonify({"message": "User already exists"}), 400
-    return jsonify(response.json()), 400
-
+        return jsonify({"message": "User already exists"}), 409
+    return jsonify({"error": "Something went wrong", "details": response.json()}), response.status_code
 
 def validate_login_data(data):
     """ Helper function to validate login data """
@@ -76,7 +75,7 @@ def admin_login():
         return jsonify({"message": "Unauthorized, Invalid password"}), 401
 
     if not user.is_admin():
-        return jsonify({"message": "Unauthorized, Insufficient permissions"}), 401
+        return jsonify({"message": "Unauthorized, Insufficient permissions"}), 403
 
     access_token = create_access_token(identity=user.email)
     refresh_token = create_refresh_token(identity=user.email)
@@ -88,23 +87,23 @@ def admin_login():
 @roles_required('Admin')
 def create_users_roles(user_id, role_name):
     """ Assign a role to a user """
-    user_response = requests.get(f'http://localhost:5001/api/v1/users/{user_id}')
-    if user_response.status_code == 404:
-        return jsonify({"message": "User not found"}), 404
 
     # Obtain the JWT token from the current request
-    current_token = get_jwt()['jti']
+    current_token = request.headers.get('Authorization', None).split(" ")[1]
     headers = {'Authorization': f'Bearer {current_token}',
                'Content-Type': 'application/json'}
 
-    role_response = requests.post('http://localhost:5001/api/v1/roles', json={"role_name": role_name}, headers=headers)
+    user_response = requests.get(f'http://localhost:5000/api/v1/users/{user_id}', headers=headers)
+    if user_response.status_code == 404:
+        return jsonify({"message": "User not found"}), 404
+
+    role_response = requests.post('http://localhost:5000/api/v1/roles', json={"role_name": role_name}, headers=headers)
     if role_response.status_code in [201, 409]:
-        assign_role_response = requests.post(f'http://localhost:5001/api/v1/users/{user_id}/roles/{role_name}', headers=headers)
+        assign_role_response = requests.post(f'http://localhost:5000/api/v1/users/{user_id}/roles/{role_name}', headers=headers)
         if assign_role_response.status_code == 201:
-            return jsonify({"message": f"Role {role_name} assigned successfully to this user",
-                            "user": user_response.json()}), 201
-        return jsonify(assign_role_response.json()), 500
-    return jsonify(role_response.json()), 500
+            return jsonify({"message": f"Role {role_name} assigned successfully to this user"}), 201
+        return jsonify({"error": f"Something went wrong when assigning role {role_name} to user", "details": assign_role_response.json()}), assign_role_response.status_code
+    return jsonify({"error": f"Something went wrong when creating a role {role_name}", "details": role_response.json()}), role_response.status_code
 
 
 @auth_bp.route('/refresh', methods=['POST'], strict_slashes=False)
