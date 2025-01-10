@@ -5,7 +5,9 @@
 
 from flask import Blueprint, jsonify
 
+
 errors_bp = Blueprint('errors_bp', __name__)
+
 
 
 @errors_bp.app_errorhandler(404)
@@ -23,3 +25,24 @@ def bad_request(error):
     if error.description:
         message = error.description
     return jsonify({"error": message}), 400
+
+@errors_bp.app_errorhandler(409)
+def conflict(error):
+    message = "Conflict"
+
+    if error.description:
+        message = error.description
+    return jsonify({"error": message}), 409
+
+@errors_bp.app_errorhandler(500)
+def internal_server_error(error):
+    message = "Internal Server Error"
+
+    if error.description:
+        message = error.description
+    return jsonify({"error": message}), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+

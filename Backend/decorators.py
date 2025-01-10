@@ -17,7 +17,7 @@ def roles_required(*roles):
             user = User.find_user_by_email(current_user_email)
 
             if not user:
-                return jsonify({"message": "User not found."}), 404
+                return jsonify({"msg": "Invalid authentication credentials."}), 401
 
             if not any(role.name in roles for role in user.roles):
                 return jsonify({"message": f"Access forbidden: User does not have the required roles {roles}."}), 403

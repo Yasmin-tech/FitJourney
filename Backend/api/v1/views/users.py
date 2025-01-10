@@ -30,7 +30,7 @@ def get_all_users():
     if not users:
         return jsonify([]), 200
     # Return the users as a json object
-    return jsonify([user.to_dict() for user in users])
+    return jsonify([user.to_dict() for user in users]), 200
 
 
 @views_bp.route('/users/<int:user_id>', methods=['GET'], strict_slashes=False)
@@ -40,13 +40,12 @@ def get_one_user(user_id):
     user = db.session.get(User, user_id)
 
     if user is None:
-        return abort(404, description="User not found")
+        return abort(404, description="User not found"), 200
     # Return the user as a json object
-    return jsonify(user.to_dict())
+    return jsonify(user.to_dict()), 200
 
 
 @views_bp.route('/users', methods=['POST'], strict_slashes=False)
-@jwt_required()
 def create_user():
     """ Create a new user """
    
@@ -109,7 +108,10 @@ def update_user(user_id):
             return abort(400, description=f"Bad Request: Invalid key {key}")
         # Verify old password when changing password
         if key == "new_password":
-            if not user.check_password(data["old_password"]):
+            old_password = data.get("old_password")
+            if not old_password:
+                return abort(400, description="Bad Request: Missing old password")
+            if not user.check_password(old_password):
                 return abort(400, description="Bad Request: Incorrect old password")
             key = "password"
             value = data["new_password"]
@@ -154,8 +156,9 @@ def remove_user(user_id):
 def get_user_roles(user_id):
     user = db.session.get(User, user_id)
 
-    if not user:
-        return jsonify({"message": "User not found"}), 404
+    print(f"User found: {user}") # Debugging print
+    if user is None:
+        return abort(404, description="User not found")
 
     user_roles = [role.to_dict() for role in user.roles]
     return jsonify(user_roles), 200
@@ -171,10 +174,15 @@ def assign_role(user_id, role_name):
     if not user or not role:
         return jsonify({"message": "User or Role not found"}), 404
 
-    user.roles.append(role)
-    db.session.commit()
-    return jsonify({"message": "Role assigned successfully"}), 201
-
+    # Check if the user already has the role
+    if role not in user.roles:
+        user.roles.append(role)
+        db.session.commit()
+        print(f"Role '{role_name}' assigned to user {user_id}") # Debug print
+        print(f"User {user_id} roles after assignment: {[role.name for role in user.roles]}")
+        return jsonify({"message": "Role assigned successfully"}), 201
+    print(f"User {user_id} already has role '{role_name}'") # Debugging print
+    return jsonify({"message": "User already has this role"}), 200
 
 
 #--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
