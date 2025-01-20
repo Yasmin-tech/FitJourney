@@ -54,14 +54,14 @@ tags:
     description: Operations related to users
   - name: roles
     description: Operations related to managing roles
+  - name: plans
+    description: Operations related to fitness plans
   - name: records
     description: Operations related to records
   - name: exercises
     description: Operations related to exercises
   - name: custom exercises
     description: Operations related to custom exercises created by the user
-  - name: plans
-    description: Operations related to fitness plans
   - name: days
     description: Operations related to planning the exercise days based on the plan
   - name: workouts
@@ -450,6 +450,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
         'default':
           description: An unexpected error occurred
           content:
@@ -840,6 +850,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
         'default':
           description: An unexpected error occurred
           content:
@@ -883,6 +903,227 @@ paths:
                     type: string
                     example: Role assigned successfully
         '404':
+          description: User or Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User or Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Remove a role from a user by their ID
+      tags:
+        - users
+      summary: Remove a role from a user
+      operationId: removeRoleFromUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: role_name
+          in: path
+          required: true
+          description: Name of the role to be removed from the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Role removed successfully from the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                roleRemoved:
+                  summary: Role removed successfully
+                  value:
+                    message: Role removed successfully
+                roleNotFound:
+                  summary: User does not have this role
+                  value:
+                    message: User does not have this role
+        '404':
+          description: User or Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                roleNotFound:
+                  summary: Role not found
+                  value:
+                    error: Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a user's role by their ID
+      tags:
+        - users
+      summary: Update a user's role
+      operationId: updateUserRole
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: role_name
+          in: path
+          required: true
+          description: Name of the role to be updated for the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Role updated successfully for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                roleUpdated:
+                  summary: Role updated successfully
+                  value:
+                    message: Role updated successfully
+                roleExists:
+                  summary: User already has this role
+                  value:
+                    message: User already has this role
+        '404':
+          description: User or Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                roleNotFound:
+                  summary: Role not found
+                  value:
+                    error: Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/upload_profile_picture:
+    post:
+      description: Upload a profile picture for a user
+      tags:
+        - users
+      summary: Upload a profile picture for a user
+      operationId: uploadProfilePicture
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Profile picture file to upload
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Profile picture uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File uploaded successfully
+                  file_url:
+                    type: string
+                    description: URL of the uploaded file in google drive
+        '404':
           description: User not found
           content:
             application/json:
@@ -898,6 +1139,1198 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noFile:
+                  summary: No file uploaded
+                  value:
+                    error: "Bad Request: No file uploaded"
+                noFileSelected:
+                  summary: No selected file
+                  value:
+                    error: "Bad Request: No file part"
+                fileExists:
+                  summary: File already exists
+                  value:
+                    error: "Bad Request: File already exists"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/profile_picture:
+    get:
+      description: Get the profile picture of a user
+      tags:
+        - users
+      summary: Get the profile picture of a user
+      operationId: getProfilePicture
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Profile picture retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                properties:
+                  file_url:
+                    type: string
+                    description: URL of the user's profile picture
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                fileNotFound:
+                  summary: Profile picture not found
+                  value:
+                    error: Profile picture not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/update_profile_picture:
+    put:
+      description: Update the profile picture of a user
+      tags:
+        - users
+      summary: Update the profile picture of a user
+      operationId: updateProfilePicture
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Profile picture file to replace the existing one
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile picture updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile picture updated successfully
+                  new_profile_picture_url:
+                    type: string
+                    description: URL of the updated file in google drive
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                fileNotFound:
+                  summary: Profile picture folder not found
+                  value:
+                    error: Profile picture folder not found, please upload a new profile picture
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noFile:
+                  summary: No file uploaded
+                  value:
+                    error: "Bad Request: No file uploaded"
+                noFileSelected:
+                  summary: No selected file
+                  value:
+                    error: "Bad Request: No file part"
+        '500':
+          description: Internal server error while handling updating user's profile picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error message including the new or old profile_picture_url
+                examples:
+                  internalServerError:
+                    summary: Internal server error
+                    value:
+                      error: internal server error
+                  FailedToUpload:
+                    summary: Failed to upload file
+                    value:
+                      error: Failed to upload new profile picture
+                  FailedToDelete:
+                    summary: Failed to delete old profile picture
+                    value:
+                      error: Failed to delete old profile picture
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/delete_profile_picture:
+    delete:
+      description: Delete the profile picture of a user
+      tags:
+        - users
+      summary: Delete the profile picture of a user
+      operationId: deleteProfilePicture
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Profile picture deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File deleted successfully
+        '404':
+          description: User or Profile picture not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                fileNotFound:
+                  summary: Profile picture not found
+                  value:
+                    error: Profile picture not found
+        '500':
+          description: Internal server error while handling deleting user's profile picture from google drive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        default:
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /roles:
+    get:
+      description: Get all roles in the system
+      tags:
+        - roles
+      summary: Get all roles
+      operationId: getAllRoles
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: Create a new role in the system
+      tags:
+        - roles
+      summary: Create a new role
+      operationId: createRole
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Role data for creating a new role
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_name:
+                  type: string
+                  description: Name of the role
+                  example: Developer
+              required: true
+      responses:
+        '201':
+          description: Role created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad Request: Missing role name"
+        '409':
+          description: Role already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Role already exists"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /roles/{role_id}:
+    get:
+      description: Get a role by ID
+      tags:
+        - roles
+      summary: Get a role by ID
+      operationId: getRoleById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          description: Unique identifier for the role
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Role retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a role by ID
+      tags:
+        - roles
+      summary: Update a role by ID
+      operationId: updateRoleById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          description: Unique identifier for the role
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Role data for updating a role
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_name:
+                  type: string
+                  description: Name of the role
+                  example: Developer
+              required: true
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Role not found
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad Request: Missing role name"
+        '409':
+          description: Role already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Role already exists"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a role by ID
+      tags:
+        - roles
+      summary: Delete a role by ID
+      operationId: deleteRoleById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          description: Unique identifier for the role
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Role deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Role deleted successfully
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /roles/{role_id}/users:
+    get:
+      description: Get all users with a specific role
+      tags:
+        - roles
+      summary: Get all users of a specific role
+      operationId: getUsersByRole
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          description: Unique identifier for the role
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of users with the specified role retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Role not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /plans:
+    get:
+      description: Get all the plans in the system
+      tags:
+        - plans
+      summary: Get all plans
+      operationId: getPlans
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plan'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /plans/{plan_id}:
+    get:
+      description: Get a plan by ID
+      tags:
+        - plans
+      summary: Get a plan by ID
+      operationId: getPlanById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Plan retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Plan not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/plans:
+    get:
+      description: Get all plans created by a user
+      tags:
+        - plans
+      summary: Get all plans created by a user
+      operationId: getPlansByUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of plans created by the user retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plan'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden, user does not have access to the plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+    post:
+      description: Create a new fitness plan for the user
+      tags:
+        - plans
+      summary: Create a plan for the user
+      operationId: createPlans
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Plan's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                goal:
+                  type: string
+                  description: User's goal for the plan
+                  example: Lose weight
+                current_weight:
+                  type: number
+                  format: string
+                  description: User's current weight
+                  example: 75.5
+                target_weight:
+                  type: number
+                  format: string
+                  description: User's target weight
+                  example: 65.5
+                duration:
+                  type: integer
+                  format: string
+                  description: Duration of the plan in weeks
+                  example: 6
+                days_in_week:
+                  type: integer
+                  format: string
+                  description: Number of days in a week to do exercises
+                  example: 5                  
+      responses:
+        '201':
+          description: Plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: User Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noGoal:
+                  summary: No goal provided
+                  value:
+                    error: "Bad Request: Missing goal"
+                noCurrentWeight:
+                  summary: No current weight provided
+                  value:
+                    error: "Bad Request: Missing current_weight"
+                noTargetWeight:
+                  summary: No target weight provided
+                  value:
+                    error: "Bad Request: Missing target_weight"
+                noDuration:
+                  summary: No duration provided
+                  value:
+                    error: "Bad Request: Missing duration"
+                noDaysInWeek:
+                  summary: No days in week provided
+                  value:
+                    error: "Bad Request: Missing days_in_week"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have this resource
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/plans/{plan_id}:
+    get:
+      description: Get a specific plan by ID for a user
+      tags:
+        - plans
+      summary: Get a plan by ID for a user
+      operationId: getPlanByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Plan retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: User or Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have access to the plan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a specific plan by ID for a user
+      tags:
+        - plans
+      summary: Update a plan by ID for a user
+      operationId: updatePlanByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Plan's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                goal:
+                  type: string
+                  description: User's goal for the plan
+                  example: Lose weight
+                current_weight:
+                  type: number
+                  format: string
+                  description: User's current weight
+                  example: 75.5
+                target_weight:
+                  type: number
+                  format: string
+                  description: User's target weight
+                  example: 65.5
+                duration:
+                  type: integer
+                  format: string
+                  description: Duration of the plan in weeks
+                  example: 6
+      responses:
+        '200':
+          description: Plan updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: User or Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noPlanData:
+                  summary: No plan data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                notValidKey:
+                  summary: Not a valid key
+                  value:
+                    error: "Bad Request: Invalid key"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have access to the plan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific plan by ID for a user
+      tags:
+        - plans
+      summary: Delete a plan by ID for a user
+      operationId: deletePlanByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: integer
+            format: int64
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Plan deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Plan deleted successfully
+        '404':
+          description: User or Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have access to the plan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         'default':
           description: An unexpected error occurred
           content:
@@ -966,3 +2399,45 @@ components:
       example:
         id: 7
         name: Developer
+    Plan:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the plan
+        user_id:
+          type: integer
+          format: int64
+          readonly: true
+          description: Unique identifier for the user who created the plan
+        goal:
+          type: string
+          description: User's goal for the plan
+          example: Lose weight
+        current_weight:
+          type: number
+          format: float
+          description: User's current weight
+          example: 75.5
+        target_weight:
+          type: number
+          format: float
+          description: User's target weight
+          example: 65.0
+        duration:
+          type: integer
+          format: int64
+          description: Duration of the plan in weeks
+          example: 6
+        days_in_week:
+          type: integer
+          format: int64
+          description: Number of days in a week to do exercises
+          example: 5
+        created_at:
+          type: string
+          format: date-time
+          readonly: true
+          description: Timestamp when the plan was created
+          example: 2022-01-01

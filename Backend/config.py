@@ -11,7 +11,8 @@ import subprocess
 from datetime import timedelta
 from flask_swagger_ui import get_swaggerui_blueprint
 
-
+# from sqlalchemy.orm import scoped_session, sessionmaker
+# from sqlalchemy import create_engine
 
 # load_dotenv()  # Load environment variables from .env file
 
@@ -36,7 +37,12 @@ class Config():
             MYSQL_HOST,
             MYSQL_DB)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
+
+    # engine = create_engine(SQLALCHEMY_DATABASE_URI)
+    # session_factory = sessionmaker(bind=engine)
+    # Session = scoped_session(session_factory)
+
 
     # JWT configuration
     SECRET_KEY = getenv("SECRET_KEY")

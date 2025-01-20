@@ -7,12 +7,8 @@
 from models.base import db, BaseModel
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, String
+from typing import List
 
-
-user_roles = db.Table('user_roles',
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
-    db.Column('role_id', db.Integer, db.ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True)
-)
 
 
 class Role(BaseModel, db.Model):
@@ -25,7 +21,7 @@ class Role(BaseModel, db.Model):
         primary_key=True,
         autoincrement=True)
     name: Mapped[str] = db.mapped_column(String(50), nullable=False, unique=True)
-    users: Mapped["User"] = db.relationship("User", secondary=user_roles, back_populates="roles")
+    users: Mapped[List["User"]]= db.relationship("User", secondary="user_roles", back_populates="roles")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

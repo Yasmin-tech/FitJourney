@@ -42,6 +42,14 @@ def internal_server_error(error):
         message = error.description
     return jsonify({"error": message}), 500
 
+@errors_bp.app_errorhandler(403)
+def forbidden(error):
+    message = "Forbidden"
+
+    if error.description:
+        message = error.description
+    return jsonify({"error": message}), 403
+
 
 if __name__ == "__main__":
     app.run(debug=True)

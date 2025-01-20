@@ -86,7 +86,7 @@ def admin_login():
 @auth_bp.route('/admin/create_users_roles/<int:user_id>/<role_name>', methods=['POST'], strict_slashes=False)
 @roles_required('Admin')
 def create_users_roles(user_id, role_name):
-    """ Assign a role to a user """
+    """ Create a new role if it does not exist and assign it to a user """
 
     # Obtain the JWT token from the current request
     current_token = request.headers.get('Authorization', None).split(" ")[1]

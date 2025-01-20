@@ -6,10 +6,19 @@
 
 from models.base import db, BaseModel
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import Integer, String, DateTime, Table, Column, ForeignKey
 from datetime import datetime
 from typing import Optional, List
 import bcrypt
+
+user_roles = Table(
+    "user_roles",
+    db.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
 
 
 class User(BaseModel, db.Model):
@@ -29,7 +38,7 @@ class User(BaseModel, db.Model):
     plans: Mapped[List["Plan"]] = relationship("Plan", back_populates="user", cascade="all, delete-orphan")
     custom_exercises: Mapped[List["CustomExercise"]] = relationship("CustomExercise", back_populates="user", cascade="all, delete-orphan")
     records: Mapped[List["Record"]] = relationship("Record", back_populates="user", cascade="all, delete-orphan")
-    roles: Mapped[List["Role"]] = relationship("Role", secondary="user_roles", back_populates="users")
+    roles: Mapped[List["Role"]] = relationship("Role", secondary=user_roles, back_populates="users")
     created_at: Mapped[datetime] = db.mapped_column(DateTime, default=datetime.utcnow)
 
 

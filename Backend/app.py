@@ -107,5 +107,14 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(app.config['SWAGGERUI_BLUEPRINT'])
 
 
+
+# # Use the scoped session for the lifetime of the request
+# @app.teardown_appcontext
+# def shutdown_session(exception=None):
+#     Session = app.config["Session"]
+#     Session.remove()
+
+
+
 if __name__ == '__main__':
     app.run(host="localhost", port="5000",debug=True)
