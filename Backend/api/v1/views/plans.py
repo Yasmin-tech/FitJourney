@@ -6,7 +6,7 @@ from models.base import db
 from models.plan import Plan
 from models.user import User
 from flask import request, jsonify, abort
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from decorators import roles_required
 
 
@@ -44,6 +44,12 @@ def get_all_plans_for_user(user_id):
     if not user:
         return abort(404, description="User not found")
 
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     # Aceess the plans attribute of the user object
     plans = user.plans
     if not plans:
@@ -65,12 +71,18 @@ def get_one_plan_for_user(user_id, plan_id):
     # Access the plans attribute of the user object
     # This generator expression will return the plan object if the plan_id matches
 
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     plan = next((plan for plan in user.plans if plan.id == plan_id), None)
     if not plan:
         return abort(404, description="Plan not found")
 
     # Return the plan as a json object
-    return jsonify(plan.to_dict())
+    return jsonify(plan.to_dict()), 200
 
 
 @views_bp.route('/users/<int:user_id>/plans', methods=['POST'], strict_slashes=False)
@@ -84,6 +96,12 @@ def create_plan_for_user(user_id):
     if not user:
         return abort(404, description="User not found")
     
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     data = request.get_json()
 
     if not data:
@@ -126,6 +144,12 @@ def update_plan_for_user(user_id, plan_id):
     if not user:
         return abort(404, description="User not found")
     
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     # Access the plans attribute of the user object
     # This generator expression will return the plan object if the plan_id matches
     plan = next((plan for plan in user.plans if plan.id == plan_id), None)
@@ -163,6 +187,12 @@ def remove_plan_for_user(user_id, plan_id):
     if not user:
         return abort(404, description="User not found")
     
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     # Access the plans attribute of the user object
     # This generator expression will return the plan object if the plan_id matches
     plan = next((plan for plan in user.plans if plan.id == plan_id), None)

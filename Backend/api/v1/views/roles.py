@@ -82,6 +82,10 @@ def update_role(role_id):
     if not role:
         return jsonify({"message": "Role not found"}), 404
 
+    # Check if the role already exists
+    existing_role = Role.find_role_by_name(data['role_name'])
+    if existing_role:
+        return jsonify({"message": "Role already exists"}), 409
     role.name = data['role_name']
     db.session.commit()
     return jsonify(role.to_dict()), 200

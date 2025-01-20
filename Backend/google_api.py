@@ -161,10 +161,8 @@ class ManageDrive:
 
     def delete_folder(self, folder_id):
         """ Delete a folder """
-        self.service.files().delete(fileId=folder_id).execute()
-        return 'Folder deleted'
-
-    def move_file(self, file_id, folder_id):
-        """ Move a file to a folder """
-        file = self
-
+        try:
+            self.service.files().delete(fileId=folder_id).execute()
+            return True, 'Folder deleted successfully'
+        except HttpError as e:
+            return False, f"An error occurred while deleting folder: {e}"

@@ -4,7 +4,7 @@
 
 from . import views_bp
 from models.base import db
-from models.user import User
+from models.user import User, user_roles
 from models.plan import Plan
 from models.role import Role
 from models.custom_exercise import CustomExercise
@@ -15,6 +15,22 @@ import os
 from flask_jwt_extended import jwt_required
 from decorators import roles_required
 
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import joinedload
+
+
+# Function to log SQL statements
+def log_sql_statements(conn, cursor, statement, parameters, context, executemany):
+    print(f"SQL Statement: {statement}")
+    print(f"Parameters: {parameters}")
+
+# Attach the logging function to the SQLAlchemy engine
+event.listen(Engine, "before_cursor_execute", log_sql_statements)
 
 
 drive = ManageDrive()
@@ -137,7 +153,7 @@ def remove_user(user_id):
     user_folder = drive.find_folder_id("user_" + str(user_id), drive.users_folder_id)
     if user_folder:
         try:
-            result, message = drive.delete_file(file_id=user_folder)
+            result, message = drive.delete_folder(folder_id=user_folder)
             if not result:
                 return abort(500, description=f"Internal Server Error: {message}")
         except Exception as e:
@@ -148,6 +164,9 @@ def remove_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": "User deleted successfully"}), 200
+
+
+#--------------------------------- User Roles ---------------------------------#
 
 
 # Endpoint to get all roles of a user
@@ -168,11 +187,20 @@ def get_user_roles(user_id):
 @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
 @roles_required("Admin")
 def assign_role(user_id, role_name):
-    user = db.session.get(User, user_id)
-    role = Role.find_role_by_name(role_name)
+    # user = db.session.get(User, user_id)
+    user = db.session.query(User).filter_by(id=user_id).first()
 
-    if not user or not role:
-        return jsonify({"message": "User or Role not found"}), 404
+
+    if not user:
+        return abort(404, description="User not found")
+    
+    # Check if the role already exists
+    role = db.session.query(Role).filter_by(name=role_name).first()
+
+    if not role:
+        return abort(404, description="Role not found")
+
+    db.session.refresh(user)  # Reload the user object
 
     # Check if the user already has the role
     if role not in user.roles:
@@ -183,6 +211,136 @@ def assign_role(user_id, role_name):
         return jsonify({"message": "Role assigned successfully"}), 201
     print(f"User {user_id} already has role '{role_name}'") # Debugging print
     return jsonify({"message": "User already has this role"}), 200
+
+# Endpoint to assign a role to a user
+# @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
+# @roles_required("Admin")
+# def assign_role(user_id, role_name):
+#     try:
+#         print(f"Assigning role '{role_name}' to user with ID {user_id}")  # Debug print
+#         user = db.session.get(User, user_id)
+#         query = db.select(Role).where(Role.name == role_name)
+#         role = db.session.execute(query).scalar()
+
+#         if not user or not role:
+#             print("User or Role not found")  # Debug print
+#             return abort(404, description="User or Role not found")
+
+#         print(f"User {user_id} roles before assignment: {[role.name for role in user.roles]}")  # Debug print
+
+#         if role not in user.roles:
+#             # Explicitly manage the session state to avoid conflicts
+#             with db.session.begin_nested():
+#                 user.roles.append(role)
+#                 db.session.add(user)  # Ensure the user object is part of the session
+
+#                 # Explicitly log session state before flush
+#                 print("Session state before flush:", db.session.identity_map.items())
+
+#                 db.session.flush()  # Flush changes to the database to track them
+
+#                 # Explicitly log session state after flush
+#                 print("Session state after flush:", db.session.identity_map.items())
+
+#             print(f"User {user_id} roles after appending: {[role.name for role in user.roles]}")  # Debug print
+
+#             db.session.commit()
+#             print(f"Role '{role_name}' assigned to user {user_id}")  # Debug print
+#             print(f"User {user_id} roles after assignment: {[role.name for role in user.roles]}")  # Debug print
+
+#             return jsonify({"message": "Role assigned successfully"}), 201
+
+#         print(f"User {user_id} already has role '{role_name}'")  # Debug print
+#         return jsonify({"message": "User already has this role"}), 200
+
+#     except Exception as e:
+#         db.session.rollback()
+#         print(f"Error assigning role: {e}")  # Debug print
+#         return jsonify({"message": "Error assigning role"}), 500
+
+#     finally:
+#         db.session.close()
+
+
+# Endpoint to remove a role from a user
+@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['DELETE'], strict_slashes=False)
+@roles_required("Admin")
+def remove_role(user_id, role_name):
+    """
+    Remove a role from a user
+    """
+    user = db.session.get(User, user_id)
+    if not user:
+        return abort(404, description="User not found")
+    
+    role = Role.find_role_by_name(role_name)
+    if not role:
+        return abort(404, description="Role not found")
+    
+    if role in user.roles:
+        user.roles.remove(role)
+        db.session.commit()
+        return jsonify({"message": "Role removed successfully"}), 200
+    
+    return jsonify({"message": "User does not have this role"}), 200
+
+
+# Endpoint to update a user's role
+@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['PUT'], strict_slashes=False)
+def update_user_role(user_id, role_name):
+    """
+    Update a user's role
+    """
+    user = db.session.get(User, user_id)
+    if not user:
+        return abort(404, description="User not found")
+    
+    role = Role.find_role_by_name(role_name)
+    if not role:
+        return abort(404, description="Role not found")
+    
+    if role in user.roles:
+        return jsonify({"message": "User already has this role"}), 200
+    
+    user.roles.append(role)
+    db.session.commit()
+    return jsonify({"message": "Role updated successfully"}), 200
+
+
+# @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['PUT'], strict_slashes=False)
+# def update_user_role(user_id, role_name):
+#     """
+#     Update a user's role
+#     """
+#     try:
+#         user = db.session.get(User, user_id)
+#         if not user:
+#             return abort(404, description="User not found")
+
+#         role = Role.find_role_by_name(role_name)
+#         if not role:
+#             return abort(404, description="Role not found")
+
+#         # Check if the user already has the role
+#         user_roles_entry = db.session.execute(
+#             db.select(user_roles).where(user_roles.c.user_id == user.id, user_roles.c.role_id == role.id)
+#         ).fetchone()
+
+#         if user_roles_entry:
+#             return jsonify({"message": "User already has this role"}), 200
+
+#         # Manually insert the new role to avoid triggering DELETE statements
+#         db.session.execute(user_roles.insert().values(user_id=user.id, role_id=role.id))
+#         db.session.commit()
+#         return jsonify({"message": "Role updated successfully"}), 200
+
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({"message": f"Error updating role: {e}"}), 500
+
+#     finally:
+#         db.session.close()
+
 
 
 #--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
@@ -222,7 +380,6 @@ def upload_profile_picture(user_id):
         return abort(400, description="Bad Request: No selected file")
     
     # Create user directory and subdirectory for profile pictures in Drive
-    # try:
 
     # Get the root folder
     root_folder = drive.root_folder_id
@@ -290,17 +447,7 @@ def update_profile_picture(user_id):
     if profile_picture.filename == "":
         return abort(400, description="Bad Request: No selected file")
 
-    # Delete the old profile picture if it exists
     old_profile_picture_url = user.profile_picture
-    print(old_profile_picture_url)
-    if old_profile_picture_url:
-        try:
-            result, message = drive.delete_file(webContentLink=old_profile_picture_url)
-            print(result, message)
-            if not result:
-                return abort(500, description=f"Failed to delete old profile picture: {message}")
-        except Exception as e:
-            return abort(500, description=f"Internal Server Error: {e}")
 
     # Save the new profile picture to a temporary location
     directory_path = f'tmp/fitjourney/user_{user_id}/profilepic'
@@ -311,20 +458,34 @@ def update_profile_picture(user_id):
     # Upload the new profile picture to Google Drive
     try:
         profile_pic_folder = drive.find_folder_id("profilepic", drive.find_folder_id("user_" + str(user_id), drive.users_folder_id))
+        if not profile_pic_folder:
+            return abort(404, description="Profile picture folder not found, please upload a new profile picture")
         file_id, web_view_link, web_content_link = drive.upload_file(file_path, profile_pic_folder)
         if not file_id:
-            return abort(500, description="Failed to upload new profile picture")
+            os.remove(file_path)
+            return abort(500, description=f"Failed to upload new profile picture, The old profile_picture_url: {old_profile_picture_url}")
 
         # Update the user's profile picture URL in the database
         web_content_link = web_content_link.split("&")[0]
         user.profile_picture = web_content_link
         db.session.commit()
+    except Exception as e:
+        return abort(500, description=f"Internal Server Error: {e}, The Old profile_picture_url: {old_profile_picture_url}")
+
+    # Delete the old profile picture if it exists
+    print(old_profile_picture_url)
+    if old_profile_picture_url:
+        try:
+            result, message = drive.delete_file(webContentLink=old_profile_picture_url)
+            print(result, message)
+            if not result:
+                return abort(500, description=f"Failed to delete old profile picture: {message}, The New profile_picture_url: {web_content_link}")
+        except Exception as e:
+            return abort(500, description=f"Internal Server Error: {e}, The New profile_picture_url: {web_content_link}")
 
         # Remove the file from the temp folder
         os.remove(file_path)
         return jsonify({"message": "Profile picture updated successfully", "new_profile_picture_url": web_content_link}), 200
-    except Exception as e:
-        return abort(500, description=f"Internal Server Error: {e}")
 
 
 @views_bp.route('/users/<int:user_id>/delete_profile_picture', methods=['DELETE'], strict_slashes=False)
