@@ -327,7 +327,7 @@ def delete_custom_exercise(user_id, custom_exercise_id):
     if custom_exercise is None:
         return abort(404, description="Custom Exercise not found")
     
-    # Delete the user's exercise folder in Google Drive
+    # Delete this exercise file in Google Drive
     if custom_exercise.media_file_url:
         try:
             result, message = drive.delete_file(webContentLink=custom_exercise.media_file_url)
