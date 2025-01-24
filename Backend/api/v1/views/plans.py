@@ -7,7 +7,7 @@ from models.plan import Plan
 from models.user import User
 from flask import request, jsonify, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from decorators import roles_required
+from decorators import roles_required, user_exists
 
 
 @views_bp.route('/plans', methods=['GET'], strict_slashes=False)
@@ -37,6 +37,7 @@ def get_one_plan(plan_id):
 
 @views_bp.route('/users/<int:user_id>/plans', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_all_plans_for_user(user_id):
     """ Retrieve all the plans for a specific user """
     user = db.session.get(User, user_id)
@@ -61,6 +62,7 @@ def get_all_plans_for_user(user_id):
 
 @views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_one_plan_for_user(user_id, plan_id):
     """ Retrieve a single plan for a specific user """
     user = db.session.get(User, user_id)
@@ -87,6 +89,7 @@ def get_one_plan_for_user(user_id, plan_id):
 
 @views_bp.route('/users/<int:user_id>/plans', methods=['POST'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def create_plan_for_user(user_id):
     """ Create a new plan for a specific user """
 
@@ -135,6 +138,7 @@ def create_plan_for_user(user_id):
 
 @views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['PUT'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def update_plan_for_user(user_id, plan_id):
     """ Update a plan for a specific user """
 
@@ -178,6 +182,7 @@ def update_plan_for_user(user_id, plan_id):
 
 @views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['DELETE'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def remove_plan_for_user(user_id, plan_id):
     """ Remove a plan for a specific user """
 

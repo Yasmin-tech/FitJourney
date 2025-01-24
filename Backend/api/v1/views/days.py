@@ -9,7 +9,7 @@ from models.plan import Plan
 from models.user import User
 from flask import request, jsonify, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from decorators import roles_required
+from decorators import roles_required, user_exists
 
 
 @views_bp.route('/days', methods=['GET'], strict_slashes=False)
@@ -39,6 +39,7 @@ def get_one_day(day_id):
 
 @views_bp.route('/plans/<int:plan_id>/days', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_all_days_for_plan(plan_id):
     """ Retrieve all the days for a specific plan """
     plan = db.session.get(Plan, plan_id)
@@ -66,6 +67,7 @@ def get_all_days_for_plan(plan_id):
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_one_day_for_plan(plan_id, day_id):
     """ Retrieve a single day for a specific plan """
     plan = db.session.get(Plan, plan_id)
@@ -94,6 +96,7 @@ def get_one_day_for_plan(plan_id, day_id):
 
 @views_bp.route('/plans/<int:plan_id>/days', methods=['POST'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def create_one_day_for_plan(plan_id):
     """ Create a new day for a specific plan """
 
@@ -134,6 +137,7 @@ def create_one_day_for_plan(plan_id):
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['PUT'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def update_day_for_plan(plan_id, day_id):
     """ Update a single day for a specific plan """
 
@@ -178,6 +182,7 @@ def update_day_for_plan(plan_id, day_id):
 
 @views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['DELETE'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def remove_day_from_plan(plan_id, day_id):
     """ Remove a single day from a specific plan """
 

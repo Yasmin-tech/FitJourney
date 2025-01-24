@@ -12,8 +12,8 @@ from models.record import Record
 from flask import request, jsonify, abort, url_for
 from google_api import ManageDrive
 import os
-from flask_jwt_extended import jwt_required
-from decorators import roles_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from decorators import roles_required, user_exists
 
 import logging
 logging.basicConfig()
@@ -51,12 +51,22 @@ def get_all_users():
 
 @views_bp.route('/users/<int:user_id>', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_one_user(user_id):
     """ Retrieve a single user from the database """
     user = db.session.get(User, user_id)
 
     if user is None:
         return abort(404, description="User not found"), 200
+    
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
     # Return the user as a json object
     return jsonify(user.to_dict()), 200
 
@@ -100,9 +110,9 @@ def create_user():
     return jsonify(new_user.to_dict()), 201
 
 
-
 @views_bp.route("/users/<int:user_id>", methods=["PUT"], strict_slashes=False)
 @jwt_required()
+@user_exists
 def update_user(user_id):
     """Update a user object"""
 
@@ -111,6 +121,14 @@ def update_user(user_id):
     if user is None:
         return abort(404, description="User not found")
     
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
     # Check if the request is a json object
     data = request.get_json()
     if not data:
@@ -141,6 +159,7 @@ def update_user(user_id):
 
 @views_bp.route("/users/<int:user_id>", methods=["DELETE"], strict_slashes=False)
 @jwt_required()
+@user_exists
 def remove_user(user_id):
     """Remove a user object"""
 
@@ -148,6 +167,14 @@ def remove_user(user_id):
 
     if user is None:
         return abort(404, description="User not found")
+
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
 
     # Delete the user's folder from drive
     user_folder = drive.find_folder_id("user_" + str(user_id), drive.users_folder_id)
@@ -158,7 +185,6 @@ def remove_user(user_id):
                 return abort(500, description=f"Internal Server Error: {message}")
         except Exception as e:
             return abort(500, description=f"Internal Server Error: {e}")
-        
     
     # Remove the user from the database
     db.session.delete(user)
@@ -212,55 +238,6 @@ def assign_role(user_id, role_name):
     print(f"User {user_id} already has role '{role_name}'") # Debugging print
     return jsonify({"message": "User already has this role"}), 200
 
-# Endpoint to assign a role to a user
-# @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
-# @roles_required("Admin")
-# def assign_role(user_id, role_name):
-#     try:
-#         print(f"Assigning role '{role_name}' to user with ID {user_id}")  # Debug print
-#         user = db.session.get(User, user_id)
-#         query = db.select(Role).where(Role.name == role_name)
-#         role = db.session.execute(query).scalar()
-
-#         if not user or not role:
-#             print("User or Role not found")  # Debug print
-#             return abort(404, description="User or Role not found")
-
-#         print(f"User {user_id} roles before assignment: {[role.name for role in user.roles]}")  # Debug print
-
-#         if role not in user.roles:
-#             # Explicitly manage the session state to avoid conflicts
-#             with db.session.begin_nested():
-#                 user.roles.append(role)
-#                 db.session.add(user)  # Ensure the user object is part of the session
-
-#                 # Explicitly log session state before flush
-#                 print("Session state before flush:", db.session.identity_map.items())
-
-#                 db.session.flush()  # Flush changes to the database to track them
-
-#                 # Explicitly log session state after flush
-#                 print("Session state after flush:", db.session.identity_map.items())
-
-#             print(f"User {user_id} roles after appending: {[role.name for role in user.roles]}")  # Debug print
-
-#             db.session.commit()
-#             print(f"Role '{role_name}' assigned to user {user_id}")  # Debug print
-#             print(f"User {user_id} roles after assignment: {[role.name for role in user.roles]}")  # Debug print
-
-#             return jsonify({"message": "Role assigned successfully"}), 201
-
-#         print(f"User {user_id} already has role '{role_name}'")  # Debug print
-#         return jsonify({"message": "User already has this role"}), 200
-
-#     except Exception as e:
-#         db.session.rollback()
-#         print(f"Error assigning role: {e}")  # Debug print
-#         return jsonify({"message": "Error assigning role"}), 500
-
-#     finally:
-#         db.session.close()
-
 
 # Endpoint to remove a role from a user
 @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['DELETE'], strict_slashes=False)
@@ -287,6 +264,7 @@ def remove_role(user_id, role_name):
 
 # Endpoint to update a user's role
 @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['PUT'], strict_slashes=False)
+@roles_required("Admin")
 def update_user_role(user_id, role_name):
     """
     Update a user's role
@@ -307,46 +285,11 @@ def update_user_role(user_id, role_name):
     return jsonify({"message": "Role updated successfully"}), 200
 
 
-# @views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['PUT'], strict_slashes=False)
-# def update_user_role(user_id, role_name):
-#     """
-#     Update a user's role
-#     """
-#     try:
-#         user = db.session.get(User, user_id)
-#         if not user:
-#             return abort(404, description="User not found")
-
-#         role = Role.find_role_by_name(role_name)
-#         if not role:
-#             return abort(404, description="Role not found")
-
-#         # Check if the user already has the role
-#         user_roles_entry = db.session.execute(
-#             db.select(user_roles).where(user_roles.c.user_id == user.id, user_roles.c.role_id == role.id)
-#         ).fetchone()
-
-#         if user_roles_entry:
-#             return jsonify({"message": "User already has this role"}), 200
-
-#         # Manually insert the new role to avoid triggering DELETE statements
-#         db.session.execute(user_roles.insert().values(user_id=user.id, role_id=role.id))
-#         db.session.commit()
-#         return jsonify({"message": "Role updated successfully"}), 200
-
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({"message": f"Error updating role: {e}"}), 500
-
-#     finally:
-#         db.session.close()
-
-
-
 #--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
 
 @views_bp.route('/users/<int:user_id>/profile_picture', methods=['GET'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def get_profile_picture(user_id):
     """ Retrieve the profile picture for the user """
     user = db.session.get(User, user_id)
@@ -354,6 +297,14 @@ def get_profile_picture(user_id):
     if user is None:
         return abort(404, description="User not found")
     
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
     # Check if the user has a profile picture
     if user.profile_picture is None:
         return abort(404, description="Profile picture not found")
@@ -364,6 +315,7 @@ def get_profile_picture(user_id):
 
 @views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['POST'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def upload_profile_picture(user_id):
     """ Upload a profile picture for the user """
     user = db.session.get(User, user_id)
@@ -371,6 +323,14 @@ def upload_profile_picture(user_id):
     if user is None:
         return abort(404, description="User not found")
     
+    ## Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
     # Check if the request has a file
     if "file" not in request.files:
         return abort(400, description="Bad Request: No file part")
@@ -434,12 +394,21 @@ def upload_profile_picture(user_id):
 
 @views_bp.route('/users/<int:user_id>/update_profile_picture', methods=['PUT'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def update_profile_picture(user_id):
     """ Update the profile picture for the user """
     user = db.session.get(User, user_id)
     if user is None:
         return abort(404, description="User not found")
     
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
     if "file" not in request.files:
         return abort(400, description="Bad Request: No file part")
     
@@ -490,6 +459,7 @@ def update_profile_picture(user_id):
 
 @views_bp.route('/users/<int:user_id>/delete_profile_picture', methods=['DELETE'], strict_slashes=False)
 @jwt_required()
+@user_exists
 def delete_profile_picture(user_id):
     """ Delete the profile picture for the user """
 
@@ -497,6 +467,15 @@ def delete_profile_picture(user_id):
     if user is None:
         return abort(404, description="User not found")
     
+   # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # Check if the log in user is the same as the user being retrieved
+    if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
+        return abort(403, description="Forbidden: You do not have permission to view this user")
+
+
     profile_picture_url = user.profile_picture
     if not profile_picture_url:
         return abort(404, description="Profile picture not found")

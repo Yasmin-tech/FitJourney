@@ -659,6 +659,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         'default':
           description: An unexpected error occurred
           content:
@@ -739,6 +749,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         'default':
           description: An unexpected error occurred
           content:
@@ -790,6 +810,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         '500':
           description: Internal server error while handling deleting user's folder from google drive
           content:
@@ -1074,6 +1104,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required roles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Admin').
         'default':
           description: An unexpected error occurred
           content:
@@ -1139,6 +1179,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         '400':
           description: "Error: BAD REQUEST"
           content:
@@ -1221,6 +1271,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         'default':
           description: An unexpected error occurred
           content:
@@ -1288,6 +1348,16 @@ paths:
                   summary: Profile picture folder not found
                   value:
                     error: Profile picture folder not found, please upload a new profile picture
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         '401':
           description: Unauthorized, insufficient permissions
           content:
@@ -1389,6 +1459,16 @@ paths:
                   summary: Profile picture not found
                   value:
                     error: Profile picture not found
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
         '500':
           description: Internal server error while handling deleting user's profile picture from google drive
           content:
