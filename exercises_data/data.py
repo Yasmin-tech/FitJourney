@@ -2,7 +2,7 @@
 import pandas as pd
 
 # Load the existing CSV file
-df = pd.read_csv('megaGymDataset.csv')
+df = pd.read_csv("megaGymDataset.csv")
 
 # # Define the mapping of old body parts to unified categories
 # body_part_mapping = {
@@ -37,6 +37,6 @@ df = pd.read_csv('megaGymDataset.csv')
 
 # print("New CSV file created successfully!")
 
-df_new = pd.read_csv('newExercisesDataset.csv')
+df_new = pd.read_csv("newExercisesDataset.csv")
 print(df_new.isnull().sum())
 print(df_new.duplicated().sum())
