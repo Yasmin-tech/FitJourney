@@ -56,20 +56,20 @@ tags:
     description: Operations related to managing roles
   - name: plans
     description: Operations related to fitness plans
+  - name: days
+    description: Operations related to planning the exercise days based on the plan
   - name: records
     description: Operations related to records
   - name: exercises
     description: Operations related to exercises
   - name: custom exercises
     description: Operations related to custom exercises created by the user
-  - name: days
-    description: Operations related to planning the exercise days based on the plan
-  - name: workouts
+  - name: workout_sessions
     description: Operations related to workout sessions
-  - name: workout exercises
-    description: Operations related to managing the exercises in a workout session
-  - name: workout custom exercises
-    description: Operations related to managing the custom exercises of a user in a workout session
+  # - name: workout exercises
+  #   description: Operations related to managing the exercises in a workout session
+  # - name: workout custom exercises
+  #   description: Operations related to managing the custom exercises of a user in a workout session
 paths:
   /signup:
     post:
@@ -1819,7 +1819,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
         '403':
-          description: Forbidden, user does not have the required roles
+          description: Forbidden, user does not have the required credentials
           content:
             application/json:
               schema:
@@ -1877,7 +1877,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
         '403':
-          description: Forbidden, user does not have the required roles
+          description: Forbidden, user does not have the required credentials
           content:
             application/json:
               schema:
@@ -2056,7 +2056,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
         '403':
-          description: Forbidden, user does not have this resource
+          description: Forbidden, user does not have the required credentials
           content:
             application/json:
               schema:
@@ -2337,7 +2337,3896 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /days:
+    get:
+      description: Retrieve all users' plans for every day in the system.
+      tags:
+        - days
+      summary: Get all planned days
+      operationId: getDays
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all planned days retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Day'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /days/{day_id}:
+    get:
+      description: Retrieve a specific day by the ID belonging to any user in any exercise plan.
+      tags:
+        - days
+      summary: Get any day plan by ID
+      operationId: getDayById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Day retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+        '404':
+          description: Day not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Day not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /plans/{plan_id}/days:
+    get:
+      description: Retrieve all days for a specific plan created by a user.
+      tags:
+        - days
+      summary: Get all days for a specific plan
+      operationId: getDaysByPlan
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all days for the plan retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Day'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Plan not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: Create a new day for a specific plan created by a user.
+      tags:
+        - days
+      summary: Create a day for a specific plan
+      operationId: createDayForPlan
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Day's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  required: true
+                  type: string
+                  description: "Title of the day(example: Day + (1 to 7)) that depends on the user's plan"
+                  example: Day 1
+                session_duration:
+                  type: integer
+                  format: string
+                  description: "Duration of the session in minutes(example: 60 minutes)"
+                  example: 60
+      responses:
+        '201':
+          description: Day created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Plan not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                noTitle:
+                  summary: No title provided
+                  value:
+                    error: "Bad Request: Missing title"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /plans/{plan_id}/days/{day_id}:
+    get:
+      description: Retrieve a specific day by the ID belonging to a specific plan created by a user.
+      tags:
+        - days
+      summary: Get a day by ID for a specific plan
+      operationId: getDayByIdForPlan
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Day retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+        '404':
+          description: Plan or Day not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a specific day by the ID belonging to a specific plan created by a user.
+      tags:
+        - days
+      summary: Update a day by ID for a specific plan
+      operationId: updateDayByIdForPlan
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Day's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  required: true
+                  type: string
+                  description: "Title of the day, for example: the user might want to change the title from Day 1 to Leg Day"
+                  example: Leg Day
+                session_duration:
+                  type: integer
+                  format: string
+                  description: "Duration of the session in minutes, for example: the user might want to change the session duration from 60 minutes to 45 minutes"
+                  example: 45
+      responses:
+        '200':
+          description: Day updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+        '404':
+          description: Plan or Day not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noDayData:
+                  summary: No day data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                notValidKey:
+                  summary: Not a valid key
+                  value:
+                    error: "Bad Request: Invalid key {key}"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific day by the ID belonging to a specific plan created by a user.
+      tags:
+        - days
+      summary: Delete a day by ID for a specific plan
+      operationId: deleteDayByIdForPlan
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: plan_id
+          in: path
+          required: true
+          description: Unique identifier for the plan
+          schema:
+            type: integer
+            format: int64
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Day deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Day deleted successfully
+        '404':
+          description: Plan or Day not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                planNotFound:
+                  summary: Plan not found
+                  value:
+                    error: Plan not found
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /workout_sessions:
+    get:
+      description: Retrieve all workout sessions of all users in the system.
+      tags:
+        - workout_sessions
+      summary: Get all workout sessions
+      operationId: getWorkoutSessions
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all workout sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/workout_sessions'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /workout_sessions/{workout_session_id}:
+    get:
+      description: Retrieve a specific workout session by the ID belonging to any user in any exercise plan.
+      tags:
+        - workout_sessions
+      summary: Get any workout session by ID
+      operationId: getWorkoutSessionById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workout_session_id
+          in: path
+          required: true
+          description: Unique identifier for the workout session
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Workout session retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workout_sessions'
+        '404':
+          description: Workout session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Workout session not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /days/{day_id}/workout_sessions:
+    get:
+      description: Retrieve all workout sessions for a specific day planned by a user in the system.
+      tags:
+        - workout_sessions
+      summary: Get all workout sessions for a specific day
+      operationId: getWorkoutSessionsByDay
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all workout sessions for the day retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/workout_sessions'
+        '404':
+          description: Day not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Day not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: Plan a new workout session for a specific day in the plan created by a user.
+      tags:
+        - workout_sessions
+      summary: Plan a workout session for a specific day
+      operationId: createWorkoutSessionForDay
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Workout session's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exercise_id:
+                  type: integer
+                  description: Unique identifier for the exercise
+                  example: 1
+                custom_exercise_id:
+                  type: integer
+                  description: Unique identifier for the custom exercise
+                  example: 1
+                sets:
+                  type: integer
+                  description: "Number of sets for the workout session (set is a group of repetitions of the same exercise)"
+                  example: 3
+                reps:
+                  type: integer
+                  description: "Number of repetitions for the workout session (repetition is the number of times you perform a specific exercise)"
+                  example: 10
+                rest:
+                  type: number
+                  format: float
+                  description: "Duration of the rest in seconds between sets"
+                  example: 60.0
+                weight_lifted:
+                  type: number
+                  format: float
+                  description: "Weight lifted in kilograms if the exercise requires weights"
+                  example: 10.0
+      responses:
+        '201':
+          description: Workout session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workout_sessions'
+        '404':
+          description: Day or Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+                exerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                noSets:
+                  summary: No sets provided
+                  value:
+                    error: "Bad Request: Missing sets"
+                noReps:
+                  summary: No reps provided
+                  value:
+                    error: "Bad Request: Missing reps"
+                noRest:
+                  summary: No rest provided
+                  value:
+                    error: "Bad Request: Missing rest"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
+  /days/{day_id}/workout_sessions/{workout_session_id}:
+    get:
+      description: Retrieve a specific workout session by the ID belonging to a specific day planned by a user.
+      tags:
+        - workout_sessions
+      summary: Get a workout session by ID for a specific day
+      operationId: getWorkoutSessionByIdForDay
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+        - name: workout_session_id
+          in: path
+          required: true
+          description: Unique identifier for the workout session
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Workout session retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workout_sessions'
+        '404':
+          description: Day or Workout session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+                workoutSessionNotFound:
+                  summary: Workout session not found
+                  value:
+                    error: Workout session not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a specific workout session by the ID belonging to a specific day planned by a user.
+      tags:
+        - workout_sessions
+      summary: Update a workout session by ID for a specific day
+      operationId: updateWorkoutSessionByIdForDay
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+        - name: workout_session_id
+          in: path
+          required: true
+          description: Unique identifier for the workout session
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Workout session's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exercise_id:
+                  type: integer
+                  description: Unique identifier for the exercise
+                  example: 1
+                custom_exercise_id:
+                  type: integer
+                  description: Unique identifier for the custom exercise
+                  example: 1
+                sets:
+                  type: integer
+                  description: "Number of sets for the workout session (set is a group of repetitions of the same exercise)"
+                  example: 3
+                reps:
+                  type: integer
+                  description: "Number of repetitions for the workout session (repetition is the number of times you perform a specific exercise)"
+                  example: 10
+                rest:
+                  type: number
+                  format: float
+                  description: "Duration of the rest in seconds between sets"
+                  example: 60.0
+                weight_lifted:
+                  type: number
+                  format: float
+                  description: "Weight lifted in kilograms if the exercise requires weights"
+                  example: 10.0
+      responses:
+        '200':
+          description: Workout session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/workout_sessions'
+        '404':
+          description: Day or Workout session or Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+                workoutSessionNotFound:
+                  summary: Workout session not found
+                  value:
+                    error: Workout session not found
+                exerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                invalidKey:
+                  summary: Invalid key
+                  value:
+                    error: "Bad Request: Invalid key {key}"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific workout session by the ID belonging to a specific day planned by a user.
+      tags:
+        - workout_sessions
+      summary: Delete a workout session by ID for a specific day
+      operationId: deleteWorkoutSessionByIdForDay
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: day_id
+          in: path
+          required: true
+          description: Unique identifier for the day
+          schema:
+            type: integer
+            format: int64
+        - name: workout_session_id
+          in: path
+          required: true
+          description: Unique identifier for the workout session
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Workout session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Workout Session deleted successfully
+        '404':
+          description: Day or Workout session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                dayNotFound:
+                  summary: Day not found
+                  value:
+                    error: Day not found
+                workoutSessionNotFound:
+                  summary: Workout session not found
+                  value:
+                    error: Workout session not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises:
+    get:
+      description: Retrieve all exercises available in the system, these are huge list of so paignation is used.
+      tags:
+        - exercises
+      summary: Get all exercises
+      operationId: getExercises
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: The page number, by default it is 1
+          schema:
+            type: integer
+            format: int64
+        - name: per_page
+          in: query
+          required: false
+          description: Number of items per page, by default it is 10
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all exercises retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercises:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Exercise'
+                  page:
+                    type: integer
+                    format: int64
+                    description: Current page number
+                  per_page:
+                    type: integer
+                    format: int64
+                    description: Number of items per page
+                  total_pages:
+                    type: integer
+                    format: int64
+                    description: Total number of exercises
+                  total_exercises:
+                    type: integer
+                    format: int64
+                    description: Total number of items
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: Create a new exercise in the system.
+      tags:
+        - exercises
+      summary: Create an exercise
+      operationId: createExercise
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Exercise's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  required: true
+                  type: string
+                  description: "Title of the exercise"
+                  example: Squats
+                category:
+                  required: true
+                  type: string
+                  description: "Category of the exercise"
+                  example: Strength
+                muscle_group:
+                  required: true
+                  type: string
+                  description: "Muscle group targeted by the exercise"
+                  example: Legs
+      responses:
+        '201':
+          description: Exercise created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                noTitle:
+                  summary: No title provided
+                  value:
+                    error: "Bad Request: Missing title"
+                noCategory:
+                  summary: No category provided
+                  value:
+                    error: "Bad Request: Missing category"
+                noMuscleGroup:
+                  summary: No muscle group provided
+                  value:
+                    error: "Bad Request: Missing muscle group"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        '409':
+          description: Conflict, exercise already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Conflict: Exercise already exists"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/title/{title}:
+    get:
+      description: Retrieve an exercise by its title.
+      summary: Retrieve an exercise by its title
+      tags:
+        - exercises
+      operationId: getExerciseByTitle
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: title
+          in: path
+          required: true
+          description: The title of the exercise
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved the exercise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/categories:
+    get:
+      description: Retrieve all categories of exercises available in the system, e.g. Strength, Cardio, etc.
+      tags:
+        - exercises
+      summary: Get all exercise categories
+      operationId: getExerciseCategories
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all exercise categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: Strength, Cardio, Flexibility, Balance
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/muscle_groups:
+    get:
+      description: Retrieve all muscle groups available that are targeted by exercises in the system, e.g. Quadriceps, Hamstrings, etc.
+      tags:
+        - exercises
+      summary: Get all muscle groups
+      operationId: getMuscleGroups
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all muscle groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: Quadriceps, Hamstrings, Glutes, Calves
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/muscle_groups/{muscle_group}:
+    get:
+      description: Retrieve all exercises that target a specific muscle group.
+      summary: Retrieve all exercises by muscle group
+      tags:
+        - exercises
+      operationId: getExercisesByMuscleGroup
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: muscle_group
+          in: path
+          required: true
+          description: The muscle group targeted by the exercises to be retrieved
+          schema:
+            type: string
+            example: Quadriceps
+      responses:
+        '200':
+          description: List of all exercises targeting the muscle group retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /exercises/{exercise_id}:
+    get:
+      description: Retrieve a specific exercise by the ID available in the system.
+      tags:
+        - exercises
+      summary: Get an exercise by ID
+      operationId: getExerciseById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Exercise retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a specific exercise by the ID available in the system.
+      tags:
+        - exercises
+      summary: Update an exercise by ID
+      operationId: updateExerciseById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Exercise's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tilte:
+                  type: string
+                  description: Name of the exercise
+                  example: Squats
+                description:
+                  type: string
+                  description: A ditailed description and instructions for the exercise
+                  example: "Stand with your feet shoulder-width apart, toes slightly turned out, and your arms at your sides."
+                category:
+                  type: string
+                  description: Category of the exercise
+                  example: Strength
+                equipment:
+                  type: string
+                  description: Equipment required for the exercise if any (e.g. dumbbells, barbell, etc.)
+                  example: None
+                muscle_group:
+                  type: string
+                  description: Muscle group targeted by the exercise
+                  example: Quadriceps
+                media_file_url:
+                  type: string
+                  description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+                  example: https://www.youtube.com/watch?v=123456
+      responses:
+        '200':
+          description: Exercise updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                invalidKey:
+                  summary: Invalid key
+                  value:
+                    error: "Bad Request: Invalid key {key}"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific exercise by the ID available in the system.
+      tags:
+        - exercises
+      summary: Delete an exercise by ID
+      operationId: deleteExerciseById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Exercise deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Exercise deleted successfully
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/{exercise_id}/media_file:
+    get:
+      description: Retrieve the media file (image or video) of a specific exercise by the ID available in the system.
+      tags:
+        - exercises
+      summary: Get the media file of an exercise by ID
+      operationId: getExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Media file retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  media_file_url:
+                    type: string
+                    example: https://www.youtube.com/watch?v=123456
+        '404':
+          description: Exercise or Media file not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                exerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+                mediaFileNotFound:
+                  summary: Media file not found
+                  value:
+                    error: Media file not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/{exercise_id}/upload_media:
+    post:
+      description: >
+        Upload a media file (image or video) for a specific exercise by the ID available in the system.
+        If the file is hosted on a third-party service like YouTube, the URL of the media file can be provided in the query parameter.
+        Else, the media file can be uploaded to the server through the Googel Drive API.
+      tags:
+        - exercises
+      summary: Upload a media file for an exercise by ID
+      operationId: uploadExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+        - name: media_file_url
+          in: query
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          schema:
+            type: string
+            example: https://www.youtube.com/watch?v=123456
+      requestBody:
+        description: Media file to be uploaded
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media_file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Media file uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The exercise media has been created successfully {link}
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noMediaFile:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Missing media file"
+                noMediaFileSelected:
+                  summary: No media file provided
+                  value:
+                    error: "Bad Request: Media file is not selected"
+                fileAlreadyExists:
+                  summary: File already exists
+                  value:
+                    error: "Bad Request: File already exists {link}"
+                notSupportedFile:
+                  summary: File not supported
+                  value:
+                    error: "Bad Request: File not supported"
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error: Failed to upload media file"
+        default:
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /exercises/{exercise_id}/update_media:
+    put:
+      description: >
+        Update the media file (image or video) of a specific exercise by the ID available in the system.
+        If the file is hosted on a third-party service like YouTube, the URL of the media file can be provided in the query parameter.
+        Else, the media file can be uploaded to the server through the Googel Drive API.
+        While updating the media file, the old media file will be deleted from the server if it exists.
+      tags:
+        - exercises
+      summary: Update the media file of an exercise by ID
+      operationId: updateExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+        - name: media_file_url
+          in: query
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          schema:
+            type: string
+            example: https://www.youtube.com/watch?v=123456
+      requestBody:
+        description: Media file to be updated
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media_file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Media file updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The exercise media has been updated successfully {link}
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noMediaFile:
+                  summary: No data provided
+                  value: "Bad Request: Missing media file"
+                noMediaFileSelected:
+                  summary: No media file provided
+                  value: "Bad Request: Media file is not selected"
+                fileAlreadyExists:
+                  summary: File already exists
+                  value: "Bad Request: File already exists {link}"
+                notSupportedFile:
+                  summary: File not supported
+                  value: "Bad Request: File not supported"
+        '404':
+          description: Exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Exercise not found  
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                failedToUpdateMedia:
+                  summary: Failed to update media file
+                  value:
+                    error: "Internal Server Error: Failed to update media file"
+                failedToDeleteOldMedia:
+                  summary: Failed to delete old media file
+                  value:
+                    error: "Internal Server Error: Failed to delete old media file"
+        default:
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 
+  /exercises/{exercise_id}/delete_media:
+    delete:
+      description: Delete the media file (image or video) of a specific exercise by the ID available in the system.
+      tags:
+        - exercises
+      summary: Delete the media file of an exercise by ID
+      operationId: deleteExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Media file deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File deleted successfully
+        '404':
+          description: Exercise or Media file not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                exerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+                mediaFileNotFound:
+                  summary: Media file not found
+                  value:
+                    error: Media file not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error: Failed to delete media file"
+        default:
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /custom_exercises:
+    get:
+      description: Retrieve all custom exercises created by any user in the system.
+      tags:
+        - custom exercises
+      summary: Get all custom exercises
+      operationId: getCustomExercises
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all custom exercises retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomExercise'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /custom_exercises/title/{title}:
+    get:
+      description: Retrieve a custom exercise created by the user by its title.
+      summary: Retrieve a custom exercise by its title
+      tags:
+        - custom exercises
+      operationId: getCustomExerciseByTitle
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: title
+          in: path
+          required: true
+          description: The title of the custom exercise
+          schema:
+            type: string
+            example: Squats
+      responses:
+        '200':
+          description: Successfully retrieved the custom exercise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExercise'
+        '404':
+          description: Custom exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Custom exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /custom_exercises/categories:
+    get:
+      description: Retrieve all categories of custom exercises created by a specific user in the system, e.g. Strength, Cardio, etc.
+      tags:
+        - custom exercises
+      summary: Get all custom exercise categories belonging to a user
+      operationId: getCustomExerciseCategories
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          description: Unique identifier for the user who created the custom exercises
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all custom exercise categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: Strength, Cardio, Flexibility, Balance
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad Request: Missing user_id"
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /custom_exercises/muscle_groups:
+    get:
+      description: Retrieve all muscle groups available that are targeted by custom exercises created by a specific user in the system, e.g. Quadriceps, Hamstrings, etc.
+      tags:
+        - custom exercises
+      summary: Get all muscle groups targeted by exercises
+      operationId: getCustomExerciseMuscleGroups
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          description: Unique identifier for the user who created the custom exercises
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all muscle groups targeted by custom exercises retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: Quadriceps, Hamstrings, Glutes, Calves
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad Request: Missing user_id"
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /custom_exercises/muscle_groups/{muscle_group}:
+    get:
+      description: Retrieve all custom exercises that target a specific muscle group created by a specific user.
+      summary: Retrieve all exercises by muscle group
+      tags:
+        - custom exercises
+      operationId: getCustomExercisesByMuscleGroup
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: muscle_group
+          in: path
+          required: true
+          description: The muscle group targeted by the custom exercises to be retrieved
+          schema:
+            type: string
+            example: Quadriceps
+        - name: user_id
+          in: query
+          required: true
+          description: Unique identifier for the user who created the custom exercises
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all custom exercises targeting the muscle group retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomExercise'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad Request: Missing user_id"
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /custom_exercises/{custom_exercise_id}:
+    get:
+      description: Retrieve a specific custom exercise by the ID created by a any user in the system.
+      tags:
+        - custom exercises
+      summary: Get a custom exercise by ID
+      operationId: getCustomExerciseById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Custom exercise retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExercise'
+        '404':
+          description: Custom exercise not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Custom exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/custom_exercises:
+    get:
+      description: Retrieve all custom exercises created by a specific user in the system.
+      tags:
+        - custom exercises
+      summary: Get all custom exercises by user
+      operationId: getCustomExercisesByUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercises
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all custom exercises created by the user retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomExercise'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: Create a new custom exercise for a specific user in the system.
+      tags:
+        - custom exercises
+      summary: Create a custom exercise for a specific user
+      operationId: createCustomExercise
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Custom exercise's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Name of the exercise
+                  example: Squats
+                description:
+                  type: string
+                  description: A ditailed description and instructions for the exercise
+                  example: "Stand with your feet shoulder-width apart, toes slightly turned out, and your arms at your sides."
+                category:
+                  type: string
+                  description: Category of the exercise
+                  example: Strength
+                equipment:
+                  type: string
+                  description: Equipment required for the exercise if any (e.g. dumbbells, barbell, etc.)
+                  example: None
+                muscle_group:
+                  type: string
+                  description: Muscle group targeted by the exercise
+                  example: Quadriceps
+                media_file_url:
+                  type: string
+                  description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+                  example: https://www.youtube.com/watch?v=123456
+      responses:
+        '201':
+          description: Custom exercise created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExercise'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                noTitle:
+                  summary: No title provided
+                  value:
+                    error: "Bad Request: Missing title"
+                noCategory:
+                  summary: No category provided
+                  value:
+                    error: "Bad Request: Missing category"
+                noMuscleGroup:
+                  summary: No muscle group provided
+                  value:
+                    error: "Bad Request: Missing muscle group"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '409':
+          description: Conflict, custom exercise already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Conflict: Custom exercise already exists"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/custom_exercises/{custom_exercise_id}:
+    get:
+      description: Retrieve a specific custom exercise created by a specific user by the ID available in the system.
+      tags:
+        - custom exercises
+      summary: Get a custom exercise by ID for a specific user
+      operationId: getCustomExerciseByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Custom exercise retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExercise'
+        '404':
+          description: Custom exercise or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: Update a specific custom exercise created by a specific user by the ID available in the system.
+      tags:
+        - custom exercises
+      summary: Update a custom exercise by ID for a specific user
+      operationId: updateCustomExerciseByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Custom exercise's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Name of the exercise
+                  example: Squats
+                description:
+                  type: string
+                  description: A ditailed description and instructions for the exercise
+                  example: "Stand with your feet shoulder-width apart, toes slightly turned out, and your arms at your sides."
+                category:
+                  type: string
+                  description: Category of the exercise
+                  example: Strength
+                equipment:
+                  type: string
+                  description: Equipment required for the exercise if any (e.g. dumbbells, barbell, etc.)
+                  example: None
+                muscle_group:
+                  type: string
+                  description: Muscle group targeted by the exercise
+                  example: Quadriceps
+                media_file_url:
+                  type: string
+                  description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+                  example: https://www.youtube.com/watch?v=123456
+      responses:
+        '200':
+          description: Custom exercise updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomExercise'
+        '404':
+          description: Custom exercise or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                notValidKey:
+                  summary: Invalid key
+                  value:
+                    error: "Bad Request: Invalid key {key}"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific custom exercise created by a specific user by the ID available in the system.
+      tags:
+        - custom exercises
+      summary: Delete a custom exercise by ID for a specific user
+      operationId: deleteCustomExerciseByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Custom exercise deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Custom exercise deleted successfully
+        '404':
+          description: Custom exercise or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '500':
+          description: >
+            "Error: INTERNAL SERVER ERROR"
+            Failed to delete custom exercise file in Google Drive and the exercise, therfore, the exercise was not deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error: Failed to delete custom exercise"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/custom_exercises/{custom_exercise_id}/media_file:
+    get:
+      description: Retrieve the media file (image or video) of a specific custom exercise by the ID created by a specific user in the system.
+      tags:
+        - custom exercises
+      summary: Get the media file of a custom exercise by ID for a specific user
+      operationId: getCustomExerciseMediaFileByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Media file retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  media_file_url:
+                    type: string
+                    example: https://www.youtube.com/watch?v=123456
+        '404':
+          description: Custom exercise or Media file not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                mediaFileNotFound:
+                  summary: Media file not found
+                  value:
+                    error: Media file not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/custom_exercises/{custom_exercise_id}/upload_media:
+    post:
+      description: >
+        Upload a media file (image or video) for a specific custom exercise by the ID created by a specific user in the system.
+        If the file is hosted on a third-party service like YouTube, the URL of the media file can be provided in the query parameter.
+        Else, the media file can be uploaded to the server through the Googel Drive API.
+      tags:
+        - custom exercises
+      summary: Upload a media file for a custom exercise by ID for a specific user
+      operationId: uploadCustomExerciseMediaFileByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: media_file_url
+          in: query
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          schema:
+            type: string
+            example: https://www.youtube.com/watch?v=123456
+      requestBody:
+        description: Media file to be uploaded
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media_file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Media file uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The exercise media has been created successfully {link}
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noMediaFile:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Missing media file"
+                noMediaFileSelected:
+                  summary: No media file provided
+                  value:
+                    error: "Bad Request: Media file is not selected"
+                fileAlreadyExists:
+                  summary: File already exists
+                  value:
+                    error: "Bad Request: File already exists {link}"
+                notSupportedFile:
+                  summary: File not supported
+                  value:
+                    error: "Bad Request: File not supported"
+        '404':
+          description: Custom exercise or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error: Failed to upload media file"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/custom_exercises/{custom_exercise_id}/update_media:
+    put:
+      description: >
+        Update the media file (image or video) of a specific exercise by the ID created by a specific user in the system.
+        If the file is hosted on a third-party service like YouTube, the URL of the media file can be provided in the query parameter.
+        Else, the media file can be uploaded to the server through the Googel Drive API.
+        While updating the media file, the old media file will be deleted from the server if it exists.
+      tags:
+        - custom exercises
+      summary: Update the media file of an custom exercise by ID created by a specific user
+      operationId: updateExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: media_file_url
+          in: query
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          schema:
+            type: string
+            example: https://www.youtube.com/watch?v=123456
+      requestBody:
+        description: Media file to be updated
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                media_file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Media file updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The exercise media has been updated successfully {link}
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noMediaFile:
+                  summary: No data provided
+                  value: "Bad Request: Missing media file"
+                noMediaFileSelected:
+                  summary: No media file provided
+                  value: "Bad Request: Media file is not selected"
+                fileAlreadyExists:
+                  summary: File already exists
+                  value: "Bad Request: File already exists {link}"
+                notSupportedFile:
+                  summary: File not supported
+                  value: "Bad Request: File not supported"
+        '404':
+          description: Custom exercise or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                failedToUpdateMedia:
+                  summary: Failed to update media file
+                  value:
+                    error: "Internal Server Error: Failed to update media file"
+                failedToDeleteOldMedia:
+                  summary: Failed to delete old media file
+                  value:
+                    error: "Internal Server Error: Failed to delete old media file"
+        default:
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 
+  /users/{user_id}/custom_exercises/{custom_exercise_id}/delete_media:
+    delete:
+      description: Delete the media file (image or video) of a specific custom exercise by the ID created by a specific user in the system.
+      tags:
+        - custom exercises
+      summary: Delete the media file of a custom exercise by ID created by a specific user
+      operationId: deleteExerciseMediaFileById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the custom exercise
+          schema:
+            type: integer
+            format: int64
+        - name: custom_exercise_id
+          in: path
+          required: true
+          description: Unique identifier for the custom exercise
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Media file deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File deleted successfully
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        '404':
+          description: Custom exercise or Media file not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+                mediaFileNotFound:
+                  summary: Media file not found
+                  value:
+                    error: Media file not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '500':
+          description: "Error: INTERNAL SERVER ERROR"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error: Failed to delete media file"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /records:
+    get:
+      description: Retrieve all records of the user's workout sessions in the system.
+      tags:
+        - records
+      summary: Get all records
+      operationId: getRecords
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /records/{record_id}:
+    get:
+      description: Retrieve a specific record by its ID for any user available in the system.
+      tags:
+        - records
+      summary: Get a record by ID
+      operationId: getRecordById
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          description: Unique identifier for the record
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          description: Record not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Record not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Access forbidden User does not have the required roles ('Developer', 'Admin').
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/records:
+    get:
+      description: Retrieve all records that the user created of the their exercise sessions in the system.
+      tags:
+        - records
+      summary: Get all records by user
+      operationId: getRecordsByUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the records
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of all records created by the user retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      description: > 
+        Create a new record for a specific user in the system.
+        The user can create multiple records with the same information if they have done the same exercise with the same difficulty, sets, reps, etc.
+        This record is aimed to help the user track their progress and see how they are improving over time in a certain exercise,
+        so ideally, Only exercise_id or custom_exercise_id should be provided, not both.
+      tags:
+        - records
+      summary: Create a record for a specific user
+      operationId: createRecord
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the record
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Record's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exercise_id:
+                  type: integer
+                  description: Unique identifier for the exercise performed. This is a pre-defined exercise from the system.
+                  example: 1
+                custom_exercise_id:
+                  type: integer
+                  description: Unique identifier for the custom exercise performed. This is a custom exercise created by the user.
+                  example: 1
+                difficulty:
+                  type: Integer
+                  format: int64
+                  description: Difficulty level of the exercise, ranging from 1 to 3. e.g. 1 means easy, 2 means moderate, 3 means hard
+                  example: 1
+                sets:
+                  type: Integer
+                  format: int64
+                  description: Number of sets or groups of repetitions of the exercise
+                  example: 3
+                reps:
+                  type: Integer
+                  format: int64
+                  description: Number of repetitions of the exercise in each set
+                  example: 10
+                rest:
+                  type: Number
+                  format: float
+                  description: Duration of the rest in seconds between sets
+                  example: 60.0
+                weight_lifted:
+                  type: Number
+                  format: float
+                  description: Weight lifted in kilograms if the exercise requires weights
+                  example: 10.0
+                location:
+                    type: string
+                    description: Location of where the user has done this exercise
+                    example: Home
+                notes:
+                    type: string
+                    description: Notes or comments about the exercise. e.g. If the weight was too heavy and they need to reduce it next time
+                    example: "The weight was too heavy, reduce it next time"
+                user_weight:
+                    type: Number
+                    format: float
+                    description: User's weight at the time of the exercise
+                    example: 75.5
+      responses:
+        '201':
+          description: Record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                noDifficulty:
+                  summary: No difficulty provided
+                  value:
+                    error: "Bad Request: Missing difficulty"
+                noSets:
+                  summary: No sets provided
+                  value:
+                    error: "Bad Request: Missing sets"
+                noReps:
+                  summary: No reps provided
+                  value:
+                    error: "Bad Request: Missing reps"
+                noRest:
+                  summary: No rest provided
+                  value:
+                    error: "Bad Request: Missing rest"
+                noUserWeight:
+                  summary: No user weight provided
+                  value:
+                    error: "Bad Request: Missing user weight"
+                noLocation:
+                  summary: No location provided
+                  value:
+                    error: "Bad Request: Missing location"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                ExerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+                CustomExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/{user_id}/records/{record_id}:
+    get:
+      description: Retrieve a specific record by its ID for a specific user available in the system.
+      tags:
+        - records
+      summary: Get a record by ID for a specific user
+      operationId: getRecordByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the record
+          schema:
+            type: integer
+            format: int64
+        - name: record_id
+          in: path
+          required: true
+          description: Unique identifier for the record
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          description: Record or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                recordNotFound:
+                  summary: Record not found
+                  value:
+                    error: Record not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      description: >
+        Update a specific record by its ID for a specific user available in the system.
+        This record is aimed to help the user track their progress and see how they are improving over time in a certain exercise,
+        so ideally, Only exercise_id or custom_exercise_id should be provided, not both.
+      tags:
+        - records
+      summary: Update a record by ID for a specific user
+      operationId: updateRecordByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the record
+          schema:
+            type: integer
+            format: int64
+        - name: record_id
+          in: path
+          required: true
+          description: Unique identifier for the record
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Record's related data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exercise_id:
+                  type: integer
+                  description: Unique identifier for the exercise performed. This is a pre-defined exercise from the system.
+                  example: 1
+                custom_exercise_id:
+                  type: integer
+                  description: Unique identifier for the custom exercise performed. This is a custom exercise created by the user.
+                  example: 1
+                difficulty:
+                  type: Integer
+                  format: int64
+                  description: Difficulty level of the exercise, ranging from 1 to 3. e.g. 1 means easy, 2 means moderate, 3 means hard
+                  example: 1
+                sets:
+                  type: Integer
+                  format: int64
+                  description: Number of sets or groups of repetitions of the exercise
+                  example: 3
+                reps:
+                  type: Integer
+                  format: int64
+                  description: Number of repetitions of the exercise in each set
+                  example: 10
+                rest:
+                  type: Number
+                  format: float
+                  description: Duration of the rest in seconds between sets
+                  example: 60.0
+                weight_lifted:
+                  type: Number
+                  format: float
+                  description: Weight lifted in kilograms if the exercise requires weights
+                  example: 10.0
+                location:
+                    type: string
+                    description: Location of where the user has done this exercise
+                    example: Home
+                notes:
+                    type: string
+                    description: Notes
+                    example: "The weight was too heavy, reduce it next time"
+                user_weight:
+                    type: Number
+                    format: float
+                    description: User's weight at the time of the exercise
+                    example: 75.5
+      responses:
+        '200':
+          description: Record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Record'
+        '404':
+          description: Record or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                recordNotFound:
+                  summary: Record not found
+                  value:
+                    error: Record not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+                exerciseNotFound:
+                  summary: Exercise not found
+                  value:
+                    error: Exercise not found
+                customExerciseNotFound:
+                  summary: Custom exercise not found
+                  value:
+                    error: Custom exercise not found
+        '400':
+          description: "Error: BAD REQUEST"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                noData:
+                  summary: No data provided
+                  value:
+                    error: "Bad Request: Not a JSON"
+                notValidKey:
+                  summary: Invalid key
+                  value:
+                    error: "Bad Request: Invalid key {key}"
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      description: Delete a specific record by its ID for a specific user available in the system.
+      tags:
+        - records
+      summary: Delete a record by ID for a specific user
+      operationId: deleteRecordByIdForUser
+      servers:
+        - url: http://localhost:5000/api/v1
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user who created the record
+          schema:
+            type: integer
+            format: int64
+        - name: record_id
+          in: path
+          required: true
+          description: Unique identifier for the record
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Record deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Record deleted successfully
+        '404':
+          description: Record or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                recordNotFound:
+                  summary: Record not found
+                  value:
+                    error: Record not found
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error: User not found
+        '401':
+          description: Unauthorized, insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '403':
+          description: Forbidden, user does not have the required credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: User does not have access to this resource"
+        'default':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   securitySchemes:
     BearerAuth:
@@ -2441,3 +6330,197 @@ components:
           readonly: true
           description: Timestamp when the plan was created
           example: 2022-01-01
+    Day:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the day
+        plan_id:
+          type: integer
+          format: int64
+          readonly: true
+          description: Unique identifier for the plan
+        title:
+          type: string
+          description: "Title of the day(example: Day + (1 to 7)) that depends on the user's plan"
+          example: Day 1
+        session_duration:
+          type: integer
+          format: int64
+          description: "Duration of the session in minutes(example: 60 minutes)"
+          example: 60
+    workout_sessions:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the workout session
+        day_id:
+          type: integer
+          format: int64
+          readonly: true
+          description: Unique identifier for the day
+        exercise_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the exercise
+        custom_exercise_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the custom exercise created by the user
+        sets:
+          type: integer
+          format: int64
+          description: "Number of sets for the workout session (set is a group of repetitions of the same exercise)"
+          example: 3
+        reps:
+          type: integer
+          format: int64
+          description: "Number of repetitions of the exercise in each set"
+          example: 10
+        rest:
+          type: number
+          format: float
+          description: "Duration of the rest in seconds between sets"
+          example: 60.0
+        weight_lifted:
+          type: number
+          format: float
+          description: "Weight lifted in kilograms if the exercise requires weights"
+          example: 10.0
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the exercise
+        tilte:
+          type: string
+          description: Name of the exercise
+          example: Squats
+        description:
+          type: string
+          description: A ditailed description and instructions for the exercise
+          example: "Stand with your feet shoulder-width apart, toes slightly turned out, and your arms at your sides."
+        category:
+          type: string
+          description: Category of the exercise
+          example: Strength
+        equipment:
+          type: string
+          description: Equipment required for the exercise if any (e.g. dumbbells, barbell, etc.)
+          example: None
+        muscle_group:
+          type: string
+          description: Muscle group targeted by the exercise
+          example: Quadriceps
+        media_file_url:
+          type: string
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          example: https://www.youtube.com/watch?v=123456
+    CustomExercise:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the exercise
+        user_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user who created the custom exercise
+        title:
+          type: string
+          description: Name of the exercise
+          example: Squats
+        description:
+          type: string
+          description: A ditailed description and instructions for the exercise
+          example: "Stand with your feet shoulder-width apart, toes slightly turned out, and your arms at your sides."
+        category:
+          type: string
+          description: Category of the exercise
+          example: Strength
+        equipment:
+          type: string
+          description: Equipment required for the exercise if any (e.g. dumbbells, barbell, etc.)
+          example: None
+        muscle_group:
+          type: string
+          description: Muscle group targeted by the exercise
+          example: Quadriceps
+        media_file_url:
+          type: string
+          description: URL of the media file (image or video) demonstrating the exercise. The media file can be hosted on a third-party service like YouTube or uploaded to the server through the Googel Drive API.
+          example: https://www.youtube.com/watch?v=123456
+    Record:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the record
+          readOnly: true
+        user_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user who created the record
+          readOnly: true
+        exercise_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the exercise performed. This is a pre-defined exercise from the system.
+          example: 1
+        custom_exercise_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the custom exercise performed. This is a custom exercise created by the user.
+          example: 1
+        date:
+          type: string
+          format: date
+          description: Date when the record was created
+          readOnly: true
+          example: 2022-01-01
+        user_weight:
+          type: number
+          format: float
+          description: User's weight on the date
+          example: 75.5
+        difficulty:
+          type: Integer
+          format: int64
+          description: Difficulty level of the exercise, ranging from 1 to 3. e.g. 1 means easy, 2 means moderate, 3 means hard
+          example: 1
+        sets:
+          type: Integer
+          format: int64
+          description: Number of sets or groups of repetitions of the exercise
+          example: 3
+        reps:
+          type: Integer
+          format: int64
+          description: Number of repetitions of the exercise in each set
+          example: 10
+        rest:
+          type: Number
+          format: float
+          description: Duration of the rest in seconds between sets
+          example: 60.0
+        weight_lifted:
+          type: Number
+          format: float
+          description: Weight lifted in kilograms if the exercise requires weights
+          example: 10.0
+        location:
+            type: string
+            description: Location of where the user has done this exercise
+            example: Home
+        notes:
+            type: string
+            description: Notes or comments about the exercise. e.g. If the weight was too heavy and they need to reduce it next time
+            example: "The weight was too heavy, reduce it next time"

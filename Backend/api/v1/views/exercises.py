@@ -8,27 +8,55 @@ from models.exercise import Exercise
 from flask import request, jsonify, abort, url_for
 import os
 from google_api import ManageDrive
-from decorators import roles_required
+from decorators import roles_required, user_exists
+from flask_jwt_extended import jwt_required
 
 
 drive = ManageDrive()
 
 
+# @views_bp.route('/exercises', methods=['GET'], strict_slashes=False)
+# @roles_required('Admin', 'Developer')
+# def get_all_exercises():
+#     """ Retrieve all the exercises from the database """
+#     query = db.select(Exercise)
+#     exercises = db.session.execute(query).scalars().all()
+
+#     if not exercises:
+#         return jsonify([]), 200
+#     # Return the exercises as a json object
+#     return jsonify([exercise.to_dict() for exercise in exercises]), 200
+
 @views_bp.route('/exercises', methods=['GET'], strict_slashes=False)
 @roles_required('Admin', 'Developer')
 def get_all_exercises():
-    """ Retrieve all the exercises from the database """
-    query = db.select(Exercise)
+    """ Retrieve all the exercises from the database with pagination """
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    query = db.select(Exercise).offset((page - 1) * per_page).limit(per_page)
     exercises = db.session.execute(query).scalars().all()
+    
+    total_exercises = db.session.query(Exercise).count()
+    total_pages = (total_exercises + per_page - 1) // per_page
 
     if not exercises:
         return jsonify([]), 200
-    # Return the exercises as a json object
-    return jsonify([exercise.to_dict() for exercise in exercises]), 200
+
+    response = {
+        'exercises': [exercise.to_dict() for exercise in exercises],
+        'page': page,
+        'per_page': per_page,
+        'total_pages': total_pages,
+        'total_exercises': total_exercises
+    }
+
+    return jsonify(response), 200
 
 
 @views_bp.route('/exercises/<int:exercise_id>', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@jwt_required()
+@user_exists
 def get_one_exercise(exercise_id):
     """ Retrieve a single exercise from the database """
     exercise = db.session.get(Exercise, exercise_id)
@@ -37,6 +65,50 @@ def get_one_exercise(exercise_id):
         return abort(404, description="Exercise not found")
     # Return the exercise as a json object
     return jsonify(exercise.to_dict()), 200
+
+
+@views_bp.route('/exercises/title/<string:title>', methods=['GET'], strict_slashes=False)
+@jwt_required()
+@user_exists
+def get_exercise_by_title(title):
+    """ Retrieve an exercise by its title """
+    exercise = db.session.query(Exercise).filter_by(title=title).first()
+    if not exercise:
+        return abort(404, description="Exercise not found")
+    
+    return jsonify(exercise.to_dict()), 200
+
+
+@views_bp.route('/exercises/categories', methods=['GET'], strict_slashes=False)
+@jwt_required()
+@user_exists
+def get_all_categories():
+    """ Retrieve all unique exercise categories """
+    categories = db.session.query(Exercise.category).distinct().all()
+    categories = [category[0] for category in categories]  # Extract the values from the tuples
+    return jsonify(categories), 200
+
+
+@views_bp.route('/exercises/muscle_groups', methods=['GET'], strict_slashes=False)
+@jwt_required()
+@user_exists
+def get_all_muscle_groups():
+    """ Retrieve a list of all unique muscle groups that exercises target """
+    muscle_groups = db.session.query(Exercise.muscle_group).distinct().all()
+    muscle_groups = [item[0] for item in muscle_groups]  # Extract the values from the tuples
+    return jsonify(muscle_groups), 200
+
+
+@views_bp.route('/exercises/muscle_groups/<string:muscle_group>', methods=['GET'], strict_slashes=False)
+@jwt_required()
+@user_exists
+def get_exercises_by_muscle_group(muscle_group):
+    """ Retrieve exercises that target a specific body part """
+    exercises = db.session.query(Exercise).filter_by(muscle_group=muscle_group).all()
+    if not exercises:
+        return jsonify([]), 200
+    
+    return jsonify([exercise.to_dict() for exercise in exercises]), 200
 
 
 @views_bp.route('/exercises', methods=['POST'], strict_slashes=False)
@@ -88,7 +160,7 @@ def update_exercise(exercise_id):
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
     
-    allowed_keys = ["title", "description", "category", "muscle_group", "equipment", "video_url", "img_url"]
+    allowed_keys = ["title", "description", "category", "muscle_group", "equipment", "media_file_url"]
     
     # Update the exercise
     for key, value in data.items():
@@ -120,7 +192,8 @@ def delete_exercise(exercise_id):
 # -----Manage uploading, updating and deleting exercises images and videos in google drive----------------------
 
 @views_bp.route('/exercises/<int:exercise_id>/media_file', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@jwt_required()
+@user_exists
 def get_exercise_media_file(exercise_id):
     """ Retrieve the media file stored as url for the exercise """
     
@@ -156,7 +229,7 @@ def upload_exercise_media(exercise_id):
     if media_file_url:
         exercise.media_file_url = media_file_url
         db.session.commit()
-        return jsonify(exercise.to_dict()), 200
+        return jsonify({"message": f"The exercise media has been created successfully {media_file_url}"}), 201
 
     # Upload the media to Google Drive if payload exists
     media_file = request.files.get('media_file', None)
@@ -190,6 +263,7 @@ def upload_exercise_media(exercise_id):
     os.remove(file_path)
 
     if not supported_file_type:
+        os.remove(file_path)
         return abort(400, description="Bad Request: Unsupported file type")
 
     if web_content_link:
@@ -211,7 +285,7 @@ def update_exercise__media(exercise_id):
     exercise = db.session.get(Exercise, exercise_id)
 
     if exercise is None:
-        return abort(404, description="Custom Exercise not found")
+        return abort(404, description="Exercise not found")
     
     # access the query parameters
     media_file_url = request.args.get('media_file_url', None)
@@ -232,7 +306,8 @@ def update_exercise__media(exercise_id):
                 return abort(500, description=f"Internal Server Error: {e}")
         exercise.media_file_url = media_file_url
         db.session.commit()
-        return jsonify(exercise.to_dict()), 200
+        return jsonify({"message": f"The exercise media has been updated successfully {media_file_url}"}), 200
+
 
     # Check payload for media file
     media_file = request.files.get('media_file', None)
