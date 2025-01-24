@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify, request
+from flask import jsonify, request, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.user import User
 
@@ -25,3 +25,16 @@ def roles_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def user_exists(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        """
+            Check if the logged-in user exists in the system
+        """
+        current_user_email = get_jwt_identity()
+        user = User.find_user_by_email(current_user_email)
+        if not user:
+            return abort(403, description="Forbidden: User does not have access to this resource")
+        return f(*args, **kwargs)
+    return decorated_function

@@ -5,9 +5,12 @@ from . import views_bp
 from models.base import db
 from models.workout_session import WorkoutSession
 from models.day import Day
+from models.exercise import Exercise
+from models.user import User
 from flask import request, jsonify, abort, url_for
 from flask_jwt_extended import jwt_required
 from decorators import roles_required
+from flask_jwt_extended import get_jwt_identity
 
 
 @views_bp.route('/workout_sessions', methods=['GET'], strict_slashes=False)
@@ -43,6 +46,16 @@ def get_day_workout_sessions(day_id):
 
     if day is None:
         return abort(404, description="Day not found")
+    
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if day.plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+    
     workout_sessions = day.workout_sessions
     # Return the workout_sessions as a json object
     return jsonify([workout_session.to_dict() for workout_session in workout_sessions]), 200
@@ -62,6 +75,15 @@ def get_day_workout_session(day_id, workout_session_id):
     if workout_session is None:
         return abort(404, description="Workout Session not found")
     
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if day.plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     return jsonify(workout_session.to_dict()), 200
 
 
@@ -79,6 +101,15 @@ def create_day_workout_session(day_id):
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
     
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if day.plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     # Check if the required fields are in the json object
     if "sets" not in data:
         return abort(400, description="Bad Request: Missing sets")
@@ -87,6 +118,18 @@ def create_day_workout_session(day_id):
     if "rest" not in data:
         return abort(400, description="Bad Request: Missing rest")
     
+    # If the json object has exercise_id, check if the exercise exists
+    if "exercise_id" in data:
+        exercise = db.session.get(Exercise, data["exercise_id"])
+        if exercise is None:
+            return abort(404, description="Exercise not found")
+
+    # If the json object has custom_exercise_id, check if the exercise exists
+    if "custom_exercise_id" in data:
+        custom_exercise = db.session.get(CustomExercise, data["custom_exercise_id"])
+        if custom_exercise is None:
+            return abort(404, description=" Custom exercise not found")
+
     workout_session = WorkoutSession(**data, day_id=day_id)
 
     # Save the workout_session to the database
@@ -112,12 +155,33 @@ def update_day_workout_session(day_id, workout_session_id):
     if workout_session is None:
         return abort(404, description="Workout Session not found")
 
+    # If the json object has custom_exercise_id, check if the exercise exists
+    if "custom_exercise_id" in data:
+        exercise = db.session.get(Exercise, data["custom_exercise_id"])
+        if exercise is None:
+            return abort(404, description="Exercise not found")
+
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if day.plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     data = request.get_json()
     # Check if the request is a json object
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
 
-    allowed_keys = ["sets", "reps", "rest", "weight_lifted"]
+    allowed_keys = ["sets", "reps", "rest", "weight_lifted", "exercise_id", "custom_exercise_id"]
+
+    # If the json object has exercise_id, check if the exercise exists
+    if "exercise_id" in data:
+        exercise = db.session.get(Exercise, data["exercise_id"])
+        if exercise is None:
+            return abort(404, description="Exercise not found")
 
     for key, value in data.items():
         if key not in allowed_keys:
@@ -144,6 +208,15 @@ def remove_day_workout_session(day_id, workout_session_id):
     workout_session = next((workout_session for workout_session in day.workout_sessions if workout_session.id == workout_session_id), None)
     if workout_session is None:
         return abort(404, description="Workout Session not found")
+
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if day.plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
 
     # Remove the workout_session from the database
     db.session.delete(workout_session)

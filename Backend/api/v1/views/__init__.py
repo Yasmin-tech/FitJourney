@@ -13,6 +13,4 @@ from .exercises import *
 from .custom_exercises import *
 from .records import *
 from .workout_sessions import *
-from .workout_sessions_custom_exercises import *
-from .workout_sessions_exercises import *
 from .roles import *

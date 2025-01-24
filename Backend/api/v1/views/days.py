@@ -6,8 +6,9 @@ from . import views_bp
 from models.base import db
 from models.day import Day
 from models.plan import Plan
+from models.user import User
 from flask import request, jsonify, abort
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from decorators import roles_required
 
 
@@ -21,7 +22,7 @@ def get_all_days():
     if not days:
         return jsonify([]), 200
     # Return the days as a json object
-    return jsonify([day.to_dict() for day in days])
+    return jsonify([day.to_dict() for day in days]), 200
 
 
 @views_bp.route('/days/<int:day_id>', methods=['GET'], strict_slashes=False)
@@ -41,6 +42,15 @@ def get_one_day(day_id):
 def get_all_days_for_plan(plan_id):
     """ Retrieve all the days for a specific plan """
     plan = db.session.get(Plan, plan_id)
+
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
 
     if not plan:
         return abort(404, description="Plan not found")
@@ -63,6 +73,15 @@ def get_one_day_for_plan(plan_id, day_id):
     if not plan:
         return abort(404, description="Plan not found")
 
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     # Access the days attribute of the plan object
     # This generator expression will return the day object if the day_id matches
     day = next((day for day in plan.days if day.id == day_id), None)
@@ -83,6 +102,14 @@ def create_one_day_for_plan(plan_id):
     if not plan:
         return abort(404, description="Plan not found")
 
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
 
     data = request.get_json()
     # Check if the request is a json object
@@ -120,6 +147,15 @@ def update_day_for_plan(plan_id, day_id):
     if not day:
         return abort(404, description="Day not found")
 
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
+
     data = request.get_json()
     # Check if the request is a json object
     if not data:
@@ -154,6 +190,15 @@ def remove_day_from_plan(plan_id, day_id):
 
     if not day:
         return abort(404, description="Day not found")
+
+    # Check the log in user credentials
+    log_in_user_email = get_jwt_identity()
+    log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
+    roles = [role.name for role in log_in_user.roles]
+    # print(plan.user.email)
+    # print(log_in_user_email)
+    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
+        return abort(403, description="Forbidden: User does not have access to this resource")
 
     # Remove the day from the database
     db.session.delete(day)
