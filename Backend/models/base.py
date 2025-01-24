@@ -15,16 +15,17 @@ time_format = "%Y-%m-%d"
 
 class Base(DeclarativeBase, MappedAsDataclass):
     """
-         Provide the bases classes the app's models
-         """
+    Provide the bases classes the app's models
+    """
+
     pass
 
 
 db = SQLAlchemy(model_class=Base)
 
 
-class BaseModel():
-    """ This will be the base model for all the models in the app
+class BaseModel:
+    """This will be the base model for all the models in the app
     It will have all basic functions that will be used by all the models
     """
 
@@ -40,16 +41,17 @@ class BaseModel():
     # return a json serializable dictionary
     def to_dict(self, time_format=time_format):
         # new_dict = self.__dict__.copy()
-        new_dict = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        new_dict = {
+            c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs
+        }
         for key, value in new_dict.items():
             if isinstance(value, datetime):
                 new_dict[key] = value.strftime(time_format)
-            
-        if "_sa_instance_state" in new_dict:
-                del new_dict["_sa_instance_state"]
-        
-        return new_dict
 
+        if "_sa_instance_state" in new_dict:
+            del new_dict["_sa_instance_state"]
+
+        return new_dict
 
     # @classmethod
     # def get_all(cls):

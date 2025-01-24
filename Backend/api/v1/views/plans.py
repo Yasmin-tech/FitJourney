@@ -10,10 +10,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from decorators import roles_required, user_exists
 
 
-@views_bp.route('/plans', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@views_bp.route("/plans", methods=["GET"], strict_slashes=False)
+@roles_required("Admin", "Developer")
 def get_all_plans():
-    """ Retrieve all the plans from the database """
+    """Retrieve all the plans from the database"""
     query = db.select(Plan)
     plans = db.session.execute(query).scalars().all()
 
@@ -23,10 +23,10 @@ def get_all_plans():
     return jsonify([plan.to_dict() for plan in plans])
 
 
-@views_bp.route('/plans/<int:plan_id>', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@views_bp.route("/plans/<int:plan_id>", methods=["GET"], strict_slashes=False)
+@roles_required("Admin", "Developer")
 def get_one_plan(plan_id):
-    """ Retrieve a single plan from the database """
+    """Retrieve a single plan from the database"""
     plan = db.session.get(Plan, plan_id)
 
     if plan is None:
@@ -35,11 +35,11 @@ def get_one_plan(plan_id):
     return jsonify(plan.to_dict()), 200
 
 
-@views_bp.route('/users/<int:user_id>/plans', methods=['GET'], strict_slashes=False)
+@views_bp.route("/users/<int:user_id>/plans", methods=["GET"], strict_slashes=False)
 @jwt_required()
 @user_exists
 def get_all_plans_for_user(user_id):
-    """ Retrieve all the plans for a specific user """
+    """Retrieve all the plans for a specific user"""
     user = db.session.get(User, user_id)
 
     if not user:
@@ -48,8 +48,14 @@ def get_all_plans_for_user(user_id):
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
-    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     # Aceess the plans attribute of the user object
     plans = user.plans
@@ -60,11 +66,13 @@ def get_all_plans_for_user(user_id):
     return jsonify([plan.to_dict() for plan in plans])
 
 
-@views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['GET'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/plans/<int:plan_id>", methods=["GET"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def get_one_plan_for_user(user_id, plan_id):
-    """ Retrieve a single plan for a specific user """
+    """Retrieve a single plan for a specific user"""
     user = db.session.get(User, user_id)
 
     if not user:
@@ -76,8 +84,14 @@ def get_one_plan_for_user(user_id, plan_id):
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
-    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     plan = next((plan for plan in user.plans if plan.id == plan_id), None)
     if not plan:
@@ -87,29 +101,35 @@ def get_one_plan_for_user(user_id, plan_id):
     return jsonify(plan.to_dict()), 200
 
 
-@views_bp.route('/users/<int:user_id>/plans', methods=['POST'], strict_slashes=False)
+@views_bp.route("/users/<int:user_id>/plans", methods=["POST"], strict_slashes=False)
 @jwt_required()
 @user_exists
 def create_plan_for_user(user_id):
-    """ Create a new plan for a specific user """
+    """Create a new plan for a specific user"""
 
     # Retrieve the user object
     user = db.session.get(User, user_id)
 
     if not user:
         return abort(404, description="User not found")
-    
+
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
-    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     data = request.get_json()
 
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
-    
+
     # Check if the required fields are in the json object
     if "goal" not in data:
         return abort(400, description="Bad Request: Missing goal")
@@ -122,7 +142,6 @@ def create_plan_for_user(user_id):
     if "days_in_week" not in data:
         return abort(400, description="Bad Request: Missing days_in_week")
 
-    
     # Create a new plan
     new_plan = Plan(**data, user_id=user_id)
 
@@ -136,23 +155,31 @@ def create_plan_for_user(user_id):
     return jsonify(new_plan.to_dict()), 201
 
 
-@views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['PUT'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/plans/<int:plan_id>", methods=["PUT"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def update_plan_for_user(user_id, plan_id):
-    """ Update a plan for a specific user """
+    """Update a plan for a specific user"""
 
     # Retrieve the user object
     user = db.session.get(User, user_id)
 
     if not user:
         return abort(404, description="User not found")
-    
+
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
-    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     # Access the plans attribute of the user object
     # This generator expression will return the plan object if the plan_id matches
@@ -160,12 +187,12 @@ def update_plan_for_user(user_id, plan_id):
 
     if not plan:
         return abort(404, description="Plan not found")
-    
+
     data = request.get_json()
 
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
-    
+
     allowed_keys = ["goal", "current_weight", "target_weight", "duration"]
 
     # Update the plan with the new data
@@ -180,23 +207,31 @@ def update_plan_for_user(user_id, plan_id):
     return jsonify(plan.to_dict()), 200
 
 
-@views_bp.route('/users/<int:user_id>/plans/<int:plan_id>', methods=['DELETE'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/plans/<int:plan_id>", methods=["DELETE"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def remove_plan_for_user(user_id, plan_id):
-    """ Remove a plan for a specific user """
+    """Remove a plan for a specific user"""
 
     # Retrieve the user object
     user = db.session.get(User, user_id)
 
     if not user:
         return abort(404, description="User not found")
-    
+
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
-    if user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     # Access the plans attribute of the user object
     # This generator expression will return the plan object if the plan_id matches
@@ -204,7 +239,7 @@ def remove_plan_for_user(user_id, plan_id):
 
     if not plan:
         return abort(404, description="Plan not found")
-    
+
     # Remove the plan from the database
     db.session.delete(plan)
     db.session.commit()

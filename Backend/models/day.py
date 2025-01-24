@@ -12,18 +12,20 @@ from typing import Optional, List
 
 
 class Day(BaseModel, db.Model):
-    """ 
-        the day class that maps to the days table in the MySQL database
-        """
+    """
+    the day class that maps to the days table in the MySQL database
+    """
+
     __tablename__ = "days"
-    id: Mapped[int] = db.mapped_column(
-        Integer,
-        primary_key=True,
-        autoincrement=True)
-    plan_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("plans.id"), nullable=False)
+    id: Mapped[int] = db.mapped_column(Integer, primary_key=True, autoincrement=True)
+    plan_id: Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("plans.id"), nullable=False
+    )
     title: Mapped[str] = db.mapped_column(String(128), nullable=False)
     _session_duration: Mapped[int] = db.mapped_column(Integer, nullable=True)
-    workout_sessions: Mapped[List["WorkoutSession"]] = relationship("WorkoutSession", back_populates="day", cascade="all, delete-orphan")
+    workout_sessions: Mapped[List["WorkoutSession"]] = relationship(
+        "WorkoutSession", back_populates="day", cascade="all, delete-orphan"
+    )
     plan: Mapped["Plan"] = relationship("Plan", back_populates="days")
 
     def __init__(self, **kwargs):
@@ -32,12 +34,12 @@ class Day(BaseModel, db.Model):
     @property
     def session_duration(self):
         return self._session_duration
-    
+
     @session_duration.setter
     def session_duration(self, value: str) -> None:
-        """ Set the session duration as an int  value """
+        """Set the session duration as an int  value"""
         self._session_duration = int(value)
-    
+
     def to_dict(self):
         new_dict = super().to_dict()
         new_dict["session_duration"] = self.session_duration

@@ -6,8 +6,7 @@
 from flask import Blueprint, jsonify
 
 
-errors_bp = Blueprint('errors_bp', __name__)
-
+errors_bp = Blueprint("errors_bp", __name__)
 
 
 @errors_bp.app_errorhandler(404)
@@ -18,6 +17,7 @@ def not_found(error):
         message = error.description
     return jsonify({"error": message}), 404
 
+
 @errors_bp.app_errorhandler(400)
 def bad_request(error):
     message = "Bad Request"
@@ -25,6 +25,7 @@ def bad_request(error):
     if error.description:
         message = error.description
     return jsonify({"error": message}), 400
+
 
 @errors_bp.app_errorhandler(409)
 def conflict(error):
@@ -34,6 +35,7 @@ def conflict(error):
         message = error.description
     return jsonify({"error": message}), 409
 
+
 @errors_bp.app_errorhandler(500)
 def internal_server_error(error):
     message = "Internal Server Error"
@@ -41,6 +43,7 @@ def internal_server_error(error):
     if error.description:
         message = error.description
     return jsonify({"error": message}), 500
+
 
 @errors_bp.app_errorhandler(403)
 def forbidden(error):
@@ -53,4 +56,3 @@ def forbidden(error):
 
 if __name__ == "__main__":
     app.run(debug=True)
-

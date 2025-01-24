@@ -28,18 +28,22 @@ from typing import Optional, List
 
 
 class WorkoutSession(BaseModel, db.Model):
-    """ 
-        the workout_session class that maps to the workout_sessions
-        table in the MySQL database
-        """
+    """
+    the workout_session class that maps to the workout_sessions
+    table in the MySQL database
+    """
+
     __tablename__ = "workout_sessions"
-    id: Mapped[int] = db.mapped_column(
-        Integer,
-        primary_key=True,
-        autoincrement=True)
-    day_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("days.id"), nullable=False)
-    exercise_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("exercises.id"), nullable=True)
-    custom_exercise_id: Mapped[int] = db.mapped_column(Integer, ForeignKey("custom_exercises.id"), nullable=True)
+    id: Mapped[int] = db.mapped_column(Integer, primary_key=True, autoincrement=True)
+    day_id: Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("days.id"), nullable=False
+    )
+    exercise_id: Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("exercises.id"), nullable=True
+    )
+    custom_exercise_id: Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("custom_exercises.id"), nullable=True
+    )
     _sets: Mapped[int] = db.mapped_column(Integer, nullable=False)
     _reps: Mapped[int] = db.mapped_column(Integer, nullable=False)
     _rest: Mapped[float] = db.mapped_column(Float, nullable=False)
@@ -47,44 +51,47 @@ class WorkoutSession(BaseModel, db.Model):
     # exercises: Mapped[List["Exercise"]] = relationship("Exercise", secondary=workout_sessions_exercises, back_populates="workout_sessions")
     # custom_exercises: Mapped[List["CustomExercise"]] = relationship("CustomExercise", secondary=workout_sessions_custom_exercises, back_populates="workout_sessions")
     day: Mapped["Day"] = relationship("Day", back_populates="workout_sessions")
-    exercise: Mapped["Exercise"] = relationship("Exercise", back_populates="workout_sessions")
-    custom_exercise: Mapped["CustomExercise"] = relationship("CustomExercise", back_populates="workout_sessions")
+    exercise: Mapped["Exercise"] = relationship(
+        "Exercise", back_populates="workout_sessions"
+    )
+    custom_exercise: Mapped["CustomExercise"] = relationship(
+        "CustomExercise", back_populates="workout_sessions"
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    
+
     @property
     def sets(self):
         return self._sets
-    
+
     @sets.setter
     def sets(self, value):
         self._sets = int(value)
-    
+
     @property
     def reps(self):
         return self._reps
-    
+
     @reps.setter
     def reps(self, value):
         self._reps = int(value)
-    
+
     @property
     def rest(self):
         return self._rest
-    
+
     @rest.setter
     def rest(self, value):
         self._rest = float(value)
-    
+
     @property
     def weight_lifted(self):
         return self._weight_lifted
-    
+
     @weight_lifted.setter
     def weight_lifted(self, value):
         self._weight_lifted = float(value)
-    
 
     def to_dict(self):
         new_dict = super().to_dict()

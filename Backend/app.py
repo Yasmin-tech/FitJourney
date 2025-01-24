@@ -8,6 +8,7 @@ import subprocess
 
 lock_file = ".setup_done"
 
+
 # Check if the setup has already been done
 def setup_user_and_database():
     if os.path.exists(lock_file):
@@ -62,10 +63,12 @@ def setup_admin_role():
     # Debugging statements to check environment variables
     print(f"ADMIN_EMAIL: {admin_email}")
     print(f"ADMIN_PASSWORD: {admin_password}")
-    
+
     if not admin_email or not admin_password:
         print("Environment variables for Admin email and/or password are not set.")
-        raise SystemExit("Error: Environment variables for Admin email and/or password are not set.")
+        raise SystemExit(
+            "Error: Environment variables for Admin email and/or password are not set."
+        )
 
     admin_role = Role.find_role_by_name("Admin")
     admin_user = User.find_user_by_email(admin_email)
@@ -82,7 +85,7 @@ def setup_admin_role():
                 first_name="Admin",
                 last_name="Admin",
                 email=os.getenv("ADMIN_EMAIL"),
-                password=os.getenv("ADMIN_PASSWORD")
+                password=os.getenv("ADMIN_PASSWORD"),
             )
         admin_user.roles.append(admin_role)
         db.session.add(admin_user)
@@ -90,6 +93,7 @@ def setup_admin_role():
         print("Admin role is assigned to the Admin user.")
     else:
         print("Admin role already exists.")
+
 
 with app.app_context():
     setup_user_and_database()
@@ -104,8 +108,7 @@ jwt.init_app(app)
 app.register_blueprint(views_bp)
 app.register_blueprint(errors_bp)
 app.register_blueprint(auth_bp)
-app.register_blueprint(app.config['SWAGGERUI_BLUEPRINT'])
-
+app.register_blueprint(app.config["SWAGGERUI_BLUEPRINT"])
 
 
 # # Use the scoped session for the lifetime of the request
@@ -115,6 +118,5 @@ app.register_blueprint(app.config['SWAGGERUI_BLUEPRINT'])
 #     Session.remove()
 
 
-
-if __name__ == '__main__':
-    app.run(host="localhost", port="5000",debug=True)
+if __name__ == "__main__":
+    app.run(host="localhost", port="5000", debug=True)

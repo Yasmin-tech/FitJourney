@@ -12,10 +12,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from decorators import roles_required, user_exists
 
 
-@views_bp.route('/days', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@views_bp.route("/days", methods=["GET"], strict_slashes=False)
+@roles_required("Admin", "Developer")
 def get_all_days():
-    """ Retrieve all the days from the database """
+    """Retrieve all the days from the database"""
     query = db.select(Day)
     days = db.session.execute(query).scalars().all()
 
@@ -25,10 +25,10 @@ def get_all_days():
     return jsonify([day.to_dict() for day in days]), 200
 
 
-@views_bp.route('/days/<int:day_id>', methods=['GET'], strict_slashes=False)
-@roles_required('Admin', 'Developer')
+@views_bp.route("/days/<int:day_id>", methods=["GET"], strict_slashes=False)
+@roles_required("Admin", "Developer")
 def get_one_day(day_id):
-    """ Retrieve a single day from the database """
+    """Retrieve a single day from the database"""
     day = db.session.get(Day, day_id)
 
     if day is None:
@@ -37,11 +37,11 @@ def get_one_day(day_id):
     return jsonify(day.to_dict()), 200
 
 
-@views_bp.route('/plans/<int:plan_id>/days', methods=['GET'], strict_slashes=False)
+@views_bp.route("/plans/<int:plan_id>/days", methods=["GET"], strict_slashes=False)
 @jwt_required()
 @user_exists
 def get_all_days_for_plan(plan_id):
-    """ Retrieve all the days for a specific plan """
+    """Retrieve all the days for a specific plan"""
     plan = db.session.get(Plan, plan_id)
 
     # Check the log in user credentials
@@ -50,8 +50,14 @@ def get_all_days_for_plan(plan_id):
     roles = [role.name for role in log_in_user.roles]
     # print(plan.user.email)
     # print(log_in_user_email)
-    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        plan.user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     if not plan:
         return abort(404, description="Plan not found")
@@ -65,11 +71,13 @@ def get_all_days_for_plan(plan_id):
     return jsonify([day.to_dict() for day in days])
 
 
-@views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['GET'], strict_slashes=False)
+@views_bp.route(
+    "/plans/<int:plan_id>/days/<int:day_id>", methods=["GET"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def get_one_day_for_plan(plan_id, day_id):
-    """ Retrieve a single day for a specific plan """
+    """Retrieve a single day for a specific plan"""
     plan = db.session.get(Plan, plan_id)
 
     if not plan:
@@ -81,8 +89,14 @@ def get_one_day_for_plan(plan_id, day_id):
     roles = [role.name for role in log_in_user.roles]
     # print(plan.user.email)
     # print(log_in_user_email)
-    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        plan.user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     # Access the days attribute of the plan object
     # This generator expression will return the day object if the day_id matches
@@ -94,11 +108,11 @@ def get_one_day_for_plan(plan_id, day_id):
     return jsonify(day.to_dict()), 200
 
 
-@views_bp.route('/plans/<int:plan_id>/days', methods=['POST'], strict_slashes=False)
+@views_bp.route("/plans/<int:plan_id>/days", methods=["POST"], strict_slashes=False)
 @jwt_required()
 @user_exists
 def create_one_day_for_plan(plan_id):
-    """ Create a new day for a specific plan """
+    """Create a new day for a specific plan"""
 
     plan = db.session.get(Plan, plan_id)
 
@@ -111,8 +125,14 @@ def create_one_day_for_plan(plan_id):
     roles = [role.name for role in log_in_user.roles]
     # print(plan.user.email)
     # print(log_in_user_email)
-    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        plan.user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     data = request.get_json()
     # Check if the request is a json object
@@ -135,11 +155,13 @@ def create_one_day_for_plan(plan_id):
     return jsonify(new_day.to_dict()), 201
 
 
-@views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['PUT'], strict_slashes=False)
+@views_bp.route(
+    "/plans/<int:plan_id>/days/<int:day_id>", methods=["PUT"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def update_day_for_plan(plan_id, day_id):
-    """ Update a single day for a specific plan """
+    """Update a single day for a specific plan"""
 
     plan = db.session.get(Plan, plan_id)
 
@@ -157,8 +179,14 @@ def update_day_for_plan(plan_id, day_id):
     roles = [role.name for role in log_in_user.roles]
     # print(plan.user.email)
     # print(log_in_user_email)
-    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        plan.user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     data = request.get_json()
     # Check if the request is a json object
@@ -180,11 +208,13 @@ def update_day_for_plan(plan_id, day_id):
     return jsonify(day.to_dict()), 200
 
 
-@views_bp.route('/plans/<int:plan_id>/days/<int:day_id>', methods=['DELETE'], strict_slashes=False)
+@views_bp.route(
+    "/plans/<int:plan_id>/days/<int:day_id>", methods=["DELETE"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def remove_day_from_plan(plan_id, day_id):
-    """ Remove a single day from a specific plan """
+    """Remove a single day from a specific plan"""
 
     plan = db.session.get(Plan, plan_id)
 
@@ -202,8 +232,14 @@ def remove_day_from_plan(plan_id, day_id):
     roles = [role.name for role in log_in_user.roles]
     # print(plan.user.email)
     # print(log_in_user_email)
-    if plan.user.email != log_in_user_email and 'Admin' not in roles and 'Developer' not in roles:
-        return abort(403, description="Forbidden: User does not have access to this resource")
+    if (
+        plan.user.email != log_in_user_email
+        and "Admin" not in roles
+        and "Developer" not in roles
+    ):
+        return abort(
+            403, description="Forbidden: User does not have access to this resource"
+        )
 
     # Remove the day from the database
     db.session.delete(day)

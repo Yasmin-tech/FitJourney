@@ -10,18 +10,17 @@ from sqlalchemy import Integer, String
 from typing import List
 
 
-
 class Role(BaseModel, db.Model):
     """
-        the role class that maps to the roles table in the MySQL database
-        """
+    the role class that maps to the roles table in the MySQL database
+    """
+
     __tablename__ = "roles"
-    id: Mapped[int] = db.mapped_column(
-        Integer,
-        primary_key=True,
-        autoincrement=True)
+    id: Mapped[int] = db.mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = db.mapped_column(String(50), nullable=False, unique=True)
-    users: Mapped[List["User"]]= db.relationship("User", secondary="user_roles", back_populates="roles")
+    users: Mapped[List["User"]] = db.relationship(
+        "User", secondary="user_roles", back_populates="roles"
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

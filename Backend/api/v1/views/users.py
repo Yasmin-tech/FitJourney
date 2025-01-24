@@ -16,8 +16,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from decorators import roles_required, user_exists
 
 import logging
+
 logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -29,6 +30,7 @@ def log_sql_statements(conn, cursor, statement, parameters, context, executemany
     print(f"SQL Statement: {statement}")
     print(f"Parameters: {parameters}")
 
+
 # Attach the logging function to the SQLAlchemy engine
 event.listen(Engine, "before_cursor_execute", log_sql_statements)
 
@@ -36,10 +38,10 @@ event.listen(Engine, "before_cursor_execute", log_sql_statements)
 drive = ManageDrive()
 
 
-@views_bp.route('/users', methods=['GET'], strict_slashes=False)
+@views_bp.route("/users", methods=["GET"], strict_slashes=False)
 @roles_required("Developer", "Admin")
 def get_all_users():
-    """ Retrieve all the users from the database """
+    """Retrieve all the users from the database"""
     query = db.select(User)
     users = db.session.execute(query).scalars().all()
 
@@ -49,37 +51,39 @@ def get_all_users():
     return jsonify([user.to_dict() for user in users]), 200
 
 
-@views_bp.route('/users/<int:user_id>', methods=['GET'], strict_slashes=False)
+@views_bp.route("/users/<int:user_id>", methods=["GET"], strict_slashes=False)
 @jwt_required()
 @user_exists
 def get_one_user(user_id):
-    """ Retrieve a single user from the database """
+    """Retrieve a single user from the database"""
     user = db.session.get(User, user_id)
 
     if user is None:
         return abort(404, description="User not found"), 200
-    
+
     # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     # Return the user as a json object
     return jsonify(user.to_dict()), 200
 
 
-@views_bp.route('/users', methods=['POST'], strict_slashes=False)
+@views_bp.route("/users", methods=["POST"], strict_slashes=False)
 def create_user():
-    """ Create a new user """
-   
+    """Create a new user"""
+
     data = request.get_json()
     # Check if the request is a json object
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
-    
+
     # Check if the required fields are in the json object
     if "first_name" not in data:
         return abort(400, description="Bad Request: Missing first_name")
@@ -89,14 +93,14 @@ def create_user():
         return abort(400, description="Bad Request: Missing email")
     if "password" not in data:
         return abort(400, description="Bad Request: Missing password")
-    
+
     # Check if the email is already in use
     query = db.select(User).where(User.email == data["email"])
     user = db.session.execute(query).scalar()
 
     if user:
         return abort(409, description="Conflict: Email already in use")
-    
+
     # Create a new user
     print(type(data["password"]))
     new_user = User(**data)
@@ -120,20 +124,22 @@ def update_user(user_id):
 
     if user is None:
         return abort(404, description="User not found")
-    
+
     # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     # Check if the request is a json object
     data = request.get_json()
     if not data:
         return abort(400, description="Bad Request: Not a JSON")
-    
+
     allowed_keys = ["first_name", "last_name", "old_password", "new_password"]
     # Update the user object
     for key, value in data.items():
@@ -150,7 +156,7 @@ def update_user(user_id):
             key = "password"
             value = data["new_password"]
         setattr(user, key, value)
-    
+
     # Save the updated user back to the database
     db.session.commit()
 
@@ -174,7 +180,9 @@ def remove_user(user_id):
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     # Delete the user's folder from drive
     user_folder = drive.find_folder_id("user_" + str(user_id), drive.users_folder_id)
@@ -185,23 +193,23 @@ def remove_user(user_id):
                 return abort(500, description=f"Internal Server Error: {message}")
         except Exception as e:
             return abort(500, description=f"Internal Server Error: {e}")
-    
+
     # Remove the user from the database
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": "User deleted successfully"}), 200
 
 
-#--------------------------------- User Roles ---------------------------------#
+# --------------------------------- User Roles ---------------------------------#
 
 
 # Endpoint to get all roles of a user
-@views_bp.route('/users/<int:user_id>/roles', methods=['GET'], strict_slashes=False)
+@views_bp.route("/users/<int:user_id>/roles", methods=["GET"], strict_slashes=False)
 @roles_required("Developer", "Admin")
 def get_user_roles(user_id):
     user = db.session.get(User, user_id)
 
-    print(f"User found: {user}") # Debugging print
+    print(f"User found: {user}")  # Debugging print
     if user is None:
         return abort(404, description="User not found")
 
@@ -210,16 +218,17 @@ def get_user_roles(user_id):
 
 
 # Endpoint to assign a role to a user
-@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['POST'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/roles/<role_name>", methods=["POST"], strict_slashes=False
+)
 @roles_required("Admin")
 def assign_role(user_id, role_name):
     # user = db.session.get(User, user_id)
     user = db.session.query(User).filter_by(id=user_id).first()
 
-
     if not user:
         return abort(404, description="User not found")
-    
+
     # Check if the role already exists
     role = db.session.query(Role).filter_by(name=role_name).first()
 
@@ -232,15 +241,19 @@ def assign_role(user_id, role_name):
     if role not in user.roles:
         user.roles.append(role)
         db.session.commit()
-        print(f"Role '{role_name}' assigned to user {user_id}") # Debug print
-        print(f"User {user_id} roles after assignment: {[role.name for role in user.roles]}")
+        print(f"Role '{role_name}' assigned to user {user_id}")  # Debug print
+        print(
+            f"User {user_id} roles after assignment: {[role.name for role in user.roles]}"
+        )
         return jsonify({"message": "Role assigned successfully"}), 201
-    print(f"User {user_id} already has role '{role_name}'") # Debugging print
+    print(f"User {user_id} already has role '{role_name}'")  # Debugging print
     return jsonify({"message": "User already has this role"}), 200
 
 
 # Endpoint to remove a role from a user
-@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['DELETE'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/roles/<role_name>", methods=["DELETE"], strict_slashes=False
+)
 @roles_required("Admin")
 def remove_role(user_id, role_name):
     """
@@ -249,21 +262,23 @@ def remove_role(user_id, role_name):
     user = db.session.get(User, user_id)
     if not user:
         return abort(404, description="User not found")
-    
+
     role = Role.find_role_by_name(role_name)
     if not role:
         return abort(404, description="Role not found")
-    
+
     if role in user.roles:
         user.roles.remove(role)
         db.session.commit()
         return jsonify({"message": "Role removed successfully"}), 200
-    
+
     return jsonify({"message": "User does not have this role"}), 200
 
 
 # Endpoint to update a user's role
-@views_bp.route('/users/<int:user_id>/roles/<role_name>', methods=['PUT'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/roles/<role_name>", methods=["PUT"], strict_slashes=False
+)
 @roles_required("Admin")
 def update_user_role(user_id, role_name):
     """
@@ -272,73 +287,84 @@ def update_user_role(user_id, role_name):
     user = db.session.get(User, user_id)
     if not user:
         return abort(404, description="User not found")
-    
+
     role = Role.find_role_by_name(role_name)
     if not role:
         return abort(404, description="Role not found")
-    
+
     if role in user.roles:
         return jsonify({"message": "User already has this role"}), 200
-    
+
     user.roles.append(role)
     db.session.commit()
     return jsonify({"message": "Role updated successfully"}), 200
 
 
-#--------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
+# --------------------------------- Profile Picture Upload, Update and Delete ---------------------------------#
 
-@views_bp.route('/users/<int:user_id>/profile_picture', methods=['GET'], strict_slashes=False)
+
+@views_bp.route(
+    "/users/<int:user_id>/profile_picture", methods=["GET"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def get_profile_picture(user_id):
-    """ Retrieve the profile picture for the user """
+    """Retrieve the profile picture for the user"""
     user = db.session.get(User, user_id)
 
     if user is None:
         return abort(404, description="User not found")
-    
+
     # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     # Check if the user has a profile picture
     if user.profile_picture is None:
         return abort(404, description="Profile picture not found")
-    
+
     # Return the profile picture as a json object
     return jsonify({"file_url": user.profile_picture}), 200
 
 
-@views_bp.route('/users/<int:user_id>/upload_profile_picture', methods=['POST'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/upload_profile_picture",
+    methods=["POST"],
+    strict_slashes=False,
+)
 @jwt_required()
 @user_exists
 def upload_profile_picture(user_id):
-    """ Upload a profile picture for the user """
+    """Upload a profile picture for the user"""
     user = db.session.get(User, user_id)
 
     if user is None:
         return abort(404, description="User not found")
-    
-    ## Check the log in user credentials
+
+    # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     # Check if the request has a file
     if "file" not in request.files:
         return abort(400, description="Bad Request: No file part")
-    
+
     profile_picture = request.files.get("file")
     if profile_picture.filename == "":
         return abort(400, description="Bad Request: No selected file")
-    
+
     # Create user directory and subdirectory for profile pictures in Drive
 
     # Get the root folder
@@ -350,7 +376,7 @@ def upload_profile_picture(user_id):
     user_folder = drive.find_folder_id(current_user_folder_name, users)
     if not user_folder:
         user_folder = drive.create_folder(current_user_folder_name, users)
-    
+
     # print(user_folder)
 
     # Create a folder for the profile pictures if it doesn't exist
@@ -361,7 +387,7 @@ def upload_profile_picture(user_id):
     # print(profile_pic_folder)
 
     # Construct the file path
-    directory_path = f'tmp/fitjourney/user_{user_id}/profilepic'
+    directory_path = f"tmp/fitjourney/user_{user_id}/profilepic"
     file_path = f"{directory_path}/{profile_picture.filename}"
     # Ensure the directory exists
     os.makedirs(directory_path, exist_ok=True)
@@ -371,10 +397,15 @@ def upload_profile_picture(user_id):
 
     file_id, file_url = drive.find_file_id(profile_picture.filename, profile_pic_folder)
     if file_id:
-        return abort(400, description=f"Bad Request: File already exists {file_url.split('&')[0]}")
+        return abort(
+            400,
+            description=f"Bad Request: File already exists {file_url.split('&')[0]}",
+        )
 
     # Upload the file to drive
-    file_id, web_view_link, web_content_link = drive.upload_file(file_path, profile_pic_folder)
+    file_id, web_view_link, web_content_link = drive.upload_file(
+        file_path, profile_pic_folder
+    )
 
     web_content_link = web_content_link.split("&")[0]
 
@@ -389,29 +420,38 @@ def upload_profile_picture(user_id):
     os.remove(file_path)
 
     # Return the file url as a json object
-    return jsonify({"message": "File uploaded successfully" ,"file_url": web_content_link}), 201
+    return (
+        jsonify(
+            {"message": "File uploaded successfully", "file_url": web_content_link}
+        ),
+        201,
+    )
 
 
-@views_bp.route('/users/<int:user_id>/update_profile_picture', methods=['PUT'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/update_profile_picture", methods=["PUT"], strict_slashes=False
+)
 @jwt_required()
 @user_exists
 def update_profile_picture(user_id):
-    """ Update the profile picture for the user """
+    """Update the profile picture for the user"""
     user = db.session.get(User, user_id)
     if user is None:
         return abort(404, description="User not found")
-    
+
     # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     if "file" not in request.files:
         return abort(400, description="Bad Request: No file part")
-    
+
     profile_picture = request.files.get("file")
     if profile_picture.filename == "":
         return abort(400, description="Bad Request: No selected file")
@@ -419,27 +459,41 @@ def update_profile_picture(user_id):
     old_profile_picture_url = user.profile_picture
 
     # Save the new profile picture to a temporary location
-    directory_path = f'tmp/fitjourney/user_{user_id}/profilepic'
+    directory_path = f"tmp/fitjourney/user_{user_id}/profilepic"
     file_path = f"{directory_path}/{profile_picture.filename}"
     os.makedirs(directory_path, exist_ok=True)
     profile_picture.save(file_path)
-    
+
     # Upload the new profile picture to Google Drive
     try:
-        profile_pic_folder = drive.find_folder_id("profilepic", drive.find_folder_id("user_" + str(user_id), drive.users_folder_id))
+        profile_pic_folder = drive.find_folder_id(
+            "profilepic",
+            drive.find_folder_id("user_" + str(user_id), drive.users_folder_id),
+        )
         if not profile_pic_folder:
-            return abort(404, description="Profile picture folder not found, please upload a new profile picture")
-        file_id, web_view_link, web_content_link = drive.upload_file(file_path, profile_pic_folder)
+            return abort(
+                404,
+                description="Profile picture folder not found, please upload a new profile picture",
+            )
+        file_id, web_view_link, web_content_link = drive.upload_file(
+            file_path, profile_pic_folder
+        )
         if not file_id:
             os.remove(file_path)
-            return abort(500, description=f"Failed to upload new profile picture, The old profile_picture_url: {old_profile_picture_url}")
+            return abort(
+                500,
+                description=f"Failed to upload new profile picture, The old profile_picture_url: {old_profile_picture_url}",
+            )
 
         # Update the user's profile picture URL in the database
         web_content_link = web_content_link.split("&")[0]
         user.profile_picture = web_content_link
         db.session.commit()
     except Exception as e:
-        return abort(500, description=f"Internal Server Error: {e}, The Old profile_picture_url: {old_profile_picture_url}")
+        return abort(
+            500,
+            description=f"Internal Server Error: {e}, The Old profile_picture_url: {old_profile_picture_url}",
+        )
 
     # Delete the old profile picture if it exists
     print(old_profile_picture_url)
@@ -448,33 +502,52 @@ def update_profile_picture(user_id):
             result, message = drive.delete_file(webContentLink=old_profile_picture_url)
             print(result, message)
             if not result:
-                return abort(500, description=f"Failed to delete old profile picture: {message}, The New profile_picture_url: {web_content_link}")
+                return abort(
+                    500,
+                    description=f"Failed to delete old profile picture: {message}, The New profile_picture_url: {web_content_link}",
+                )
         except Exception as e:
-            return abort(500, description=f"Internal Server Error: {e}, The New profile_picture_url: {web_content_link}")
+            return abort(
+                500,
+                description=f"Internal Server Error: {e}, The New profile_picture_url: {web_content_link}",
+            )
 
         # Remove the file from the temp folder
         os.remove(file_path)
-        return jsonify({"message": "Profile picture updated successfully", "new_profile_picture_url": web_content_link}), 200
+        return (
+            jsonify(
+                {
+                    "message": "Profile picture updated successfully",
+                    "new_profile_picture_url": web_content_link,
+                }
+            ),
+            200,
+        )
 
 
-@views_bp.route('/users/<int:user_id>/delete_profile_picture', methods=['DELETE'], strict_slashes=False)
+@views_bp.route(
+    "/users/<int:user_id>/delete_profile_picture",
+    methods=["DELETE"],
+    strict_slashes=False,
+)
 @jwt_required()
 @user_exists
 def delete_profile_picture(user_id):
-    """ Delete the profile picture for the user """
+    """Delete the profile picture for the user"""
 
     user = db.session.get(User, user_id)
     if user is None:
         return abort(404, description="User not found")
-    
-   # Check the log in user credentials
+
+    # Check the log in user credentials
     log_in_user_email = get_jwt_identity()
     log_in_user = db.session.query(User).filter_by(email=log_in_user_email).first()
     roles = [role.name for role in log_in_user.roles]
     # Check if the log in user is the same as the user being retrieved
     if log_in_user.id != user_id and "Admin" not in roles and "Developer" not in roles:
-        return abort(403, description="Forbidden: You do not have permission to view this user")
-
+        return abort(
+            403, description="Forbidden: You do not have permission to view this user"
+        )
 
     profile_picture_url = user.profile_picture
     if not profile_picture_url:
@@ -482,13 +555,13 @@ def delete_profile_picture(user_id):
 
     try:
         result, message = drive.delete_file(webContentLink=profile_picture_url)
-        
+
         if result is True:
             # update the user profile picture to None
             user.profile_picture = None
             db.session.commit()
             return jsonify({"message": message}), 200
-        
+
         return abort(500, description=f"Internal Server Error: {message}")
     except Exception as e:
         return abort(500, description=f"Internal Server Error: {e}")
