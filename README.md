@@ -62,9 +62,9 @@ The primary goal of the FitJourney APP API is to offer developers a powerful and
 
 - ✔️  **Error Handling**: The system provides clear and informative error messages to help users and developers quickly understand and resolve any issues.
 
-## Tech Stack 🛠️
+## Tech Stack
 
-The FitJourney APP API is built using the following technologies:
+ 🛠️ The FitJourney APP API is built using the following technologies:
 
 - **Programming Language**:
   - 🐍 Python: A versatile and powerful programming language used for backend development.
@@ -121,16 +121,16 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 
 We appreciate your contributions and thank you for improving the FitJourney APP API!
 
-## Contact 👤
+## Contact
 
-For any questions, feedback, or inquiries, please contact:
+ 👤 For any questions, feedback, or inquiries, please contact:
 
 - **Name**: Yasmin Mahmud
 - **Email**: jazzsalam2020@gmail.com
 
 We appreciate your interest in FitJourney and are here to help!
 
-## License ©️
+## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+ ©️This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
 
