@@ -2,3 +2,4 @@
 __pycache__/
 Backend/credentials.json
 Backend/tmp/
+SetUp/set_env.sh
