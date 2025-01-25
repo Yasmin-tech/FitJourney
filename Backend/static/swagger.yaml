@@ -11,23 +11,41 @@ info:
     various front-end applications.
 
 
+
     **Key Features**:
+
 
     - **Secure Authentication**: User authentication and authorization are implemented using JSON Web Tokens (JWT) to ensure a secure process.
 
+
+
     - **RESTful Endpoints**: A comprehensive set of RESTful endpoints allows for the execution of CRUD (Create, Read, Update, Delete) operations on users, workouts, exercises, and other entities.
+
+
 
     - **Role-Based Access Control**: The system includes a main admin user who has access to all API endpoints and is responsible for granting access to other developers. Admins can create developer roles and assign them to engineers involved in the project. Certain endpoints are restricted to users with Admin or Developer roles.
 
+
+
     - **Predefined Exercises**: The API comes with over 2,000 predefined exercises, which can only be accessed by admins or developers. The dataset used to populate the exercises table is found in the `exercises_data` directory as `megaGymDataset.csv`. This data has been cleaned and processed using the `/exercises_data/data.py` script, resulting in the final `newExercisesDataset.csv`. To populate your local database, run the `populate_exercises_table.py` script, ensuring you pass the admin JWT tokens after uncommenting the last line. Note that there are no media files for the exercises, but you can send a POST request to add images or videos.
+
+
 
     - **User Management**: Enable users to create accounts, log in, upload a profile picture for personalization, and manage their profiles securely.
 
+
+
     - **Personalized Workout Plans**: Assist users in managing their workout plans by helping them define their goals, current weight, target weight, the duration of the plan in weeks, and the number of days they plan to exercise each week. Then, create a detailed daily plan that includes exercises. Users can either select predefined exercises from the system based on the target muscle groups or create their own custom exercises.
+
+
 
     - **Custom Exercises**: Users should be able to create their own exercise sets, including a description of each exercise and its instructions. They can categorize the exercises (e.g., Cardio, Strength), specify the muscle groups targeted, list any necessary equipment, and include images or videos to aid in performing the exercises correctly.
     
+
+
     - **Progress Monitoring**: Allow users to log their daily exercise sessions to help them track progress and achieve their fitness goals. Users can enter all relevant details of each exercise, including the number of sets and reps completed, the duration of rest between sets, the weight lifted in kilograms for strength training exercises, as well as the location and difficulty of the workout. This information will assist them in receiving feedback for their next session. Additionally, a notes section will be provided for users to record any observations or thoughts efficiently.
+
+
 
     - **Exercise Tracking**: Creating daily logs will enable users to see and track their progress and adjust their plans accordingly.
 
@@ -41,7 +59,6 @@ info:
 
     - **Records**: Track and retrieve fitness records using the `records` endpoints.
 
-
     - **Exercises**: Access detailed information about exercises with the `exercises` endpoints.
 
     - **Plans**: Create and manage fitness plans using the `plans` endpoints.
@@ -49,12 +66,11 @@ info:
   version: 1.0.0
   termsOfService: https://opensource.org/licenses/MIT
   contact:
-    name: Your Name
-    url: http://your-website.com
-    email: your-email@example.com
+    name: Yasmin Mahmud
+    email: jazzsalam2020@gmail.com
   license:
     name: MIT License
-    url: https://opensource.org/licenses/MIT
+    url: https://opensource.org/license/mit
 servers:
   - url: http://localhost:5000/api/v1
     description: APIs endpoint for development
