@@ -13,6 +13,7 @@
 - [Goals](#goals)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [File Structure](#Ffile-structure).
 - [Installation & Configuration & API Documentation](#installation)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
@@ -89,6 +90,38 @@ The primary goal of the FitJourney APP API is to offer developers a powerful and
 
 - **File Storage**:
   - Google Drive: Used for storing media files like images and videos of the exercises and users' profile pictures.
+
+## File Structure
+
+📂 Here’s a guide to the essential files and directories in our project:
+
+
+- **`README.md`**: Overview of the project.
+- **`LICENSE`**: MIT LICENSE
+- **`.venv/`**: Python virtual environment
+- **`Backend/`**: Contains the main source code.
+  - **`app`**:  Entry point of the application.
+  - **`api/v1/views**: A directory that contains all API 
+endpoints
+  - **`models/`**: A directory that contains files 
+related to the table schemas of all entities
+  - **`static/swagger.yaml`**: The API documentation
+  - **`config.py`**: The flask configuration file
+  - **`auth.py`**: API endpoints related to signup, login, and assigning routes.
+  - **`google_api.py`**: A file continues all functions needed to manage files in Google Drive.
+  - **`errors.py`**: Organize error handlers for the app
+  - **`decorators.py`**: Decorators related to managing JWT token
+  - **`credentials.json.enc`**:  Encrypted file containing the credentials needed to access Google Drive API
+  - **`migrations/`**: Flask-migration and Alembic-related migration files and versions
+ 
+- **`SetUp/`**: A directory that contains a bash script to set the needed environment variables and set the database
+  - **`set_env.sh`**: Set up environment variables
+  - **`setup_user_and_database.sh`**: Get Access to the local MySQL and create the database and the user
+- **`exercises_data/`**: A directory that contains 2 Python scripts to manage to send a post request to the database at "http://localhost:5000/api/v1/exercises" and populate the exercises database
+
+
+This map will help you navigate the project and locate key files with ease!
+
 
 ## Contributing
 
