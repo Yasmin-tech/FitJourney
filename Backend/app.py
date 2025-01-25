@@ -8,7 +8,6 @@ import subprocess
 
 lock_file = ".setup_done"
 
-
 # Check if the setup has already been done
 def setup_user_and_database():
     if os.path.exists(lock_file):
@@ -108,14 +107,7 @@ jwt.init_app(app)
 app.register_blueprint(views_bp)
 app.register_blueprint(errors_bp)
 app.register_blueprint(auth_bp)
-app.register_blueprint(app.config["SWAGGERUI_BLUEPRINT"])
-
-
-# # Use the scoped session for the lifetime of the request
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     Session = app.config["Session"]
-#     Session.remove()
+app.register_blueprint(app.config['SWAGGERUI_BLUEPRINT'])
 
 
 if __name__ == "__main__":
