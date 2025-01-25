@@ -13,7 +13,7 @@
 - [Goals](#goals)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [File Structure](#Ffile-structure).
+- [File Structure](#file-structure)
 - [Installation & Configuration & API Documentation](#installation)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
