@@ -2,17 +2,29 @@
 
 # Set up the default environment variables
 echo "Setting up environment variables..."
-export MYSQL_USERNAME="fit_journey_user"
-export MYSQL_PASSWORD="fit_journey_password"
-export MYSQL_DB="FitJourney"
+
+# Set your MySQL username that will have access and all privileges to the database
+export MYSQL_USERNAME=""
+
+# Set your MySQL user password
+export MYSQL_PASSWORD=""
+
+# Set the name of the database
+export MYSQL_DB=""
 export MYSQL_HOST="localhost"
 
-export ADMIN_EMAIL="admin@exaample.com"
+
+# Set the email of the admin user that will be created in the database
+# This user should have the role of admin and should be logged in to access some of the functionalities
+export ADMIN_EMAIL=""
 export ADMIN_PASSWORD="adminpassword"
 
-# unset ADMIN_EMAIL
-# unset ADMIN_PASSWORD
+# Set the secret key for the Flask application
+# You can generate a secret key by running the following command in the Python shell:
+#   import secrets
+#   secret_key = secrets.token_hex()  # Generates a 64-character hex string
+#   Copy the output of the command and paste it here
+export SECRET_KEY=""
 
-export SECRET_KEY="ed5de5c8d6448e9e5d6b9ffbdb5335bed33577fe2bbfa863333a194e9611f6ac"
 
 export PYTHONPATH=$PYTHONPATH:/home/yasminmahmud/FitJourney/Backend
