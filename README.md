@@ -12,7 +12,7 @@
 - [Purpose](#purpose)
 - [Goals](#goals)
 - [Features](#features)
-- [Tech Stack](#technology-stack)
+- [Tech Stack](#tech-stack)
 - [Installation & Configuration & API Documentation](#installation)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
