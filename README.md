@@ -17,6 +17,8 @@
 - [Installation](#installation)
 - [Setting Up the Database](#setting-up-the-database)
 - [Running Swagger Documentation](#running-swagger-documentation)
+- [Restarting the Server](#restarting-the-server)
+- [Populating Exercises Table with Predefined Exercises](#populating-exercises-table-with-predefined-exercises)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
 - [License](#license)
@@ -51,10 +53,13 @@ The primary goal of the FitJourney APP API is to offer developers a powerful and
 - ✔️  **Secure Authentication**: User authentication and authorization are implemented using JSON Web Tokens (JWT) to ensure a secure process.
 
 
+- ✔️  **Password Security**: User passwords are not stored as plain text. Instead, they are hashed using bcrypt, a strong and secure hashing algorithm, to ensure that user credentials are protected.
+
+
 - ✔️  **RESTful Endpoints**: A comprehensive set of RESTful endpoints allows for the execution of CRUD (Create, Read, Update, Delete) operations on users, workouts, exercises, and other entities.
 
 
-- **Data Validation**: Robust mechanisms for data validation are in place to ensure data integrity and consistency.
+- ✔️  **Data Validation**: Robust mechanisms for data validation are in place to ensure data integrity and consistency.
 
 
 - ✔️  **Role-Based Access Control**: The system includes a main admin user who has access to all API endpoints and is responsible for granting access to other developers. Admins can create developer roles and assign them to engineers involved in the project. Certain endpoints are restricted to users with Admin or Developer roles.
@@ -222,7 +227,7 @@ Now you are ready to set up the database. We'll start by creating the migration 
                 
         ```sh
         cd Backend
-        flask run
+        ./app.py
         
         ```
         
@@ -233,6 +238,109 @@ Now you are ready to set up the database. We'll start by creating the migration 
         ```sh
         http://localhost:5000/api/docs/
         ```
+
+3. **Login with Admin User**:
+
+    -   Log in as the admin user using the Swagger interface. Navigate to the `/admin/login` endpoint under the `auth` tag.
+    
+    -   Enter the admin credentials and execute the request. The response will include an access token.
+    
+    -   Use this access token to authorize yourself by clicking on the "Authorize" button in the Swagger interface and entering the token.
+    
+    -   With the access token, you can access other routes, such as `/users`, which are only accessible by users with Admin or Developer roles.
+    
+    -   Currently, you will find only one user, which is the admin itself.
+    
+    -   For more detailed information about the available endpoints and their responses, you can check in the Swagger documentation.
+
+
+## Restarting the Server
+
+After completing the initial setup, you don't need to repeat all the installation steps. For subsequent runs, you can simply follow these steps from the root directory:
+
+1. **Activate the Virtual Environment**:
+   ```sh
+   source .venv/bin/activate
+	```
+2. **Set Environment Variables**:
+	```sh
+	source SetUp/set_env.sh
+	```
+3. **Navigate to Backend Directory and Start the Application**:
+	```sh
+	cd Backend
+	./app.py
+	```
+
+## Populating Exercises Table with Predefined Exercises
+
+To make use of the predefined dataset and populate the exercises table, follow these steps:
+
+1.  **Ensure the Server is Running**:
+    
+    -   If you have stopped the server, restart it by following these commands from the root directory:
+                
+        ```sh
+        source .venv/bin/activate
+        source SetUp/set_env.sh
+        cd Backend
+        ./app.py
+        
+        ```
+        
+2.  **Open a New Terminal Tab**:
+    
+    -   Open a new terminal tab and navigate to the project directory.
+        
+3.  **Navigate to the exercises_data Directory**:
+    
+    -   Change to the `exercises_data` directory:
+                
+        ```sh
+        cd exercises_data
+        
+        ```
+        
+4.  **Uncomment the Last Line in the Script**:
+    
+    -   Open the `populate_exercises_table.py` script and uncomment the last line:
+        
+    <div align="center">
+		   <img src="https://i.imgur.com/GZ8A0Z0.png" alt="" />
+</div>
+        
+5.  **Pass the Admin JWT Access Token**:
+    
+    -   Make sure to pass the Admin JWT access token, which you can obtain from the `/admin/login` endpoint in the Swagger interface.
+        
+6.  **Run the Script to Populate Exercises Table**:
+    
+    -   Execute the script to read the `newExercisesDataset.csv` file and populate the exercises table line by line:
+                
+        ```sh
+        ./populate_exercises_table.py <put here your admin access token>
+        
+        ```
+        
+
+**Exercise Planning Options**
+
+Once the exercises table is populated, users have two options when planning their workout sessions:
+
+- **Choose from Predefined Exercises**:
+    
+    -   Select exercises from the predefined list that has been populated in the exercises table.
+        
+-  **Create Custom Exercises**:
+    
+    -   Create their own custom set of exercises with detailed descriptions, images, and videos.
+        
+
+##### Additional Information
+
+For more detailed information about the available endpoints and their responses, please refer to the Swagger documentation accessible at http://localhost:5000/api/docs/.
+
+By following these steps, developers can easily populate the exercises table with the predefined dataset and provide users with flexible options for planning their workout sessions.
 
 
 
