@@ -142,10 +142,10 @@ This map will help you navigate the project and locate key files with ease!
 	   pip install -r requirements.txt
 	   ```
 
-	4. Modify the setup file, you'll need to open the file in your preferred text editor like Vim, and put in all the required information. *Read the comment in the file to guide you*
-		```sh
+   4. Modify the setup file, you'll need to open the file in your preferred text editor like Vim, and put in all the required information. *Read the comment in the file to guide you*
+      ```sh
 		vim SetUp/set_env.sh
-		```
+      ```
 <div align="center">
    <img src="https://i.imgur.com/LUvKQC7.png" alt="" />
   </div>
