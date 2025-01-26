@@ -118,7 +118,7 @@ related to the table schemas of all entities
   - **`set_env.sh`**: Set up environment variables
   - **`setup_user_and_database.sh`**: Get Access to the local MySQL and create the database and the user
 - **`exercises_data/`**: A directory that contains 2 Python scripts to manage to send a post request to the database at "http://localhost:5000/api/v1/exercises" and populate the exercises table
-
+- **`requirements.txt`**: File contains all the dependencies needed by the Flask app
 
 This map will help you navigate the project and locate key files with ease!
 
