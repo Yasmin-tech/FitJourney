@@ -14,7 +14,9 @@
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [File Structure](#file-structure)
-- [Installation & Configuration & API Documentation](#installation)
+- [Installation](#installation)
+- [Setting Up the Database](#setting-up-the-database)
+- [Running Swagger Documentation](#running-swagger-documentation)
 - [Running Tests](#running-tests)
 - [Contributing](#contributing)
 - [License](#license)
@@ -121,6 +123,117 @@ related to the table schemas of all entities
 - **`requirements.txt`**: File contains all the dependencies needed by the Flask app
 
 This map will help you navigate the project and locate key files with ease!
+
+## Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/Yasmin-tech/FitJourney.git
+   cd FitJourney/
+   ```
+  
+  2. Create and activate a virtual environment:
+		```sh
+		python3 -m venv .venv
+		source .venv/bin/activate
+		```
+
+   3. Install the required dependencies:
+	   ```sh
+	   pip install -r requirements.txt
+	   ```
+
+	4. Modify the setup file, you'll need to open the file in your preferred text editor like Vim, and put in all the required information. *Read the comment in the file to guide you*
+		```sh
+		vim SetUp/set_env.sh
+		```
+<div align="center">
+   <img src="https://i.imgur.com/LUvKQC7.png" alt="" />
+  </div>
+
+ 5. After you fill your  variables in the `SetUp/set_env.sh` file, run
+	```sh
+	source SetUp/set_env.sh
+	```
+6. credentials.json :
+	Decrypt the credentials.json.enc file, this contains the credentials for the Google Drive API of the app. This uses symmetric encryption, so you need the key used in the encryption process. 
+	*please contact the Author to get access*
+	 ```sh
+	  cd Backend/
+	  ./decrypt_credentials.sh <password>
+	```
+	*Replace `<password>` with the decryption password provided to you.*
+	   
+	Instead, follow the instructions in this video  [Link](https://www.youtube.com/watch?v=fkWM7A-MxR0&t=1163s) to create your own app and API key in Google Cloud
+	**Now you can access credentials.json**
+	[next step](#setting-up-the-database)
+
+
+## Setting Up the Database
+
+Now you are ready to set up the database. We'll start by creating the migration script to use for making any changes to the schema in the future.
+
+-  **First-Time Setup**:
+    
+    -   If this is your first time running `Backend/app.py` or the migration script, the following will happen automatically:
+        
+        -   The script `SetUp/setup_user_and_database.sh` will run to create the database and the user for the first time.
+            
+        -   An admin user will be created using the email provided in `SetUp/set_env.sh`.
+            
+- **Subsequent Runs**:
+    
+    -   For subsequent runs of the app, `SetUp/setup_user_and_database.sh` will not run again.
+        
+    -   The admin user will already be present in the database, so no need to recreate it.
+
+
+1. Database Migrations with Custom Directory:
+
+	**strong text**
+
+	> NOTE:
+	> The existing migration scripts are designed to bring an older schema to the current version. If your local schema already matches the latest version, running these migrations can cause conflicts. Solution: Creating and Using Your Own Migration Directory  To avoid these issues 👇
+
+- Initialize Custom Migrations Directory:
+	 Initialize a new migration directory with a custom name:
+ ```sh
+     flask db init --directory custom_migrations
+   ```
+
+- Create New Migrations in Custom Directory:
+ IF making changes to your models, create new migration scripts in the custom directory:
+ ```sh
+     flask db migrate -m "description of changes" --directory custom_migrations
+   ```
+  
+  - Apply Migrations from Custom Directory:
+		 Apply the new migration scripts from the custom directory to your local database:
+```sh
+	flask db upgrade --directory custom_migrations
+```
+[next step](#running-swagger-documentation)
+
+
+## Running Swagger Documentation
+
+1.  **Run the Application**:
+    
+    -   First, ensure the application is running. Navigate to the backend directory and start the Flask application, make sure you are in the Backend directory:
+                
+        ```sh
+        cd Backend
+        flask run
+        
+        ```
+        
+2.  **Access Swagger Documentation**:
+    
+    -   Once the application is running, open your web browser and navigate to the following URL to access the Swagger documentation:
+   
+        ```sh
+        http://localhost:5000/api/docs/
+        ```
+
 
 
 ## Contributing
