@@ -17,8 +17,13 @@ df = pd.read_csv("newExercisesDataset.csv")
 df.fillna("", inplace=True)
 
 # Endpoint URL
-url = "http://localhost:5001/api/v1/exercises"
+url = "http://localhost:5000/api/v1/exercises"
 Authorization = sys.argv[1]
+
+if not Authorization:
+    print("Please provide a valid token!")
+    sys.exit(1)
+
 headers = {
     "Authorization": "Bearer " + Authorization,
     "Content-Type": "application/json",
