@@ -2,6 +2,13 @@ openapi: 3.0.3
 info:
   title: FitJourney API
   description: >
+
+    Welcome to the FitJourney API documentation.
+
+
+    ![FitJourney Logo](https://i.imgur.com/DDFAoRJ.jpeg)
+  
+  
     FitJourney APP API is to offer developers a powerful and versatile set of tools
     for creating their own fitness planning and tracking applications.
     By utilizing this API, developers can design apps that empower users to
@@ -18,6 +25,9 @@ info:
     - **Secure Authentication**: User authentication and authorization are implemented using JSON Web Tokens (JWT) to ensure a secure process.
 
 
+    - **Password Security**: User passwords are not stored as plain text. Instead, they are hashed using bcrypt, a strong and secure hashing algorithm, to ensure that user credentials are protected.
+
+
 
     - **RESTful Endpoints**: A comprehensive set of RESTful endpoints allows for the execution of CRUD (Create, Read, Update, Delete) operations on users, workouts, exercises, and other entities.
 
@@ -27,7 +37,7 @@ info:
 
 
 
-    - **Predefined Exercises**: The API comes with over 2,000 predefined exercises, which can only be accessed by admins or developers. The dataset used to populate the exercises table is found in the `exercises_data` directory as `megaGymDataset.csv`. This data has been cleaned and processed using the `/exercises_data/data.py` script, resulting in the final `newExercisesDataset.csv`. To populate your local database, run the `populate_exercises_table.py` script, ensuring you pass the admin JWT tokens after uncommenting the last line. Note that there are no media files for the exercises, but you can send a POST request to add images or videos.
+    - **Predefined Exercises**: The API comes with over 2,000 predefined exercises, which can only be accessed by admins or developers. The dataset used to populate the exercises table is found in the `exercises_data` directory as `megaGymDataset.csv`. This data has been cleaned and processed using the `exercises_data/data.py` script, resulting in the final `newExercisesDataset.csv`. To populate your local database, run the `populate_exercises_table.py` script, ensuring you pass the admin JWT tokens after uncommenting the last line. Note that there are no media files for the exercises, but you can send a POST request to add images or videos.
 
 
 
@@ -55,13 +65,40 @@ info:
 
     - **Users**: Manage user information and profiles with endpoints in the `users` tag.
 
+
     - **Auth**: Use the `auth` endpoints for login, registration, and token management.
+
 
     - **Records**: Track and retrieve fitness records using the `records` endpoints.
 
+
     - **Exercises**: Access detailed information about exercises with the `exercises` endpoints.
 
+
     - **Plans**: Create and manage fitness plans using the `plans` endpoints.
+
+
+    - **Days**: Plan each day based on the fitness plan with the `days` endpoints.
+
+
+    - **Workout Sessions**: Create and manage workout sessions in the plan with the `workout_sessions` endpoints.
+
+
+    - **Custom Exercises**: Manage custom exercises created by users with the `custom exercises` endpoints.
+
+
+    - **Roles**: Manage roles and permissions with the `roles` endpoints.
+
+
+
+
+
+    **A diagram that shows the end user journey in the app**:
+
+
+      <div style="text-align: center;">
+        <img src="https://i.imgur.com/TQfI2mr.png" alt="" />
+      </div>
 
   version: 1.0.0
   termsOfService: https://opensource.org/licenses/MIT
