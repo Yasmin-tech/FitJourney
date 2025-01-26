@@ -19,7 +19,7 @@
 - [Running Swagger Documentation](#running-swagger-documentation)
 - [Restarting the Server](#restarting-the-server)
 - [Populating Exercises Table with Predefined Exercises](#populating-exercises-table-with-predefined-exercises)
-- [Running Tests](#running-tests)
+- [A diagram that shows the user journey](#example-of-the-end-user-journey-in-the-app)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -341,6 +341,13 @@ Once the exercises table is populated, users have two options when planning thei
 For more detailed information about the available endpoints and their responses, please refer to the Swagger documentation accessible at http://localhost:5000/api/docs/.
 
 By following these steps, developers can easily populate the exercises table with the predefined dataset and provide users with flexible options for planning their workout sessions.
+
+
+## Example of the end-user journey in the app
+
+<div style="text-align: center;">
+      <img src="https://i.imgur.com/TQfI2mr.png" alt="" />
+    </div>
 
 
 
