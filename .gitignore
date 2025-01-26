@@ -3,4 +3,4 @@ __pycache__/
 Backend/credentials.json
 Backend/tmp/
 SetUp/local_set_env.sh
-
+Backend/.setup_done
