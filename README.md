@@ -194,8 +194,6 @@ Now you are ready to set up the database. We'll start by creating the migration 
 
 1. Database Migrations with Custom Directory:
 
-	**strong text**
-
 	> NOTE:
 	> The existing migration scripts are designed to bring an older schema to the current version. If your local schema already matches the latest version, running these migrations can cause conflicts. Solution: Creating and Using Your Own Migration Directory  To avoid these issues 👇
 
@@ -291,17 +289,22 @@ To make use of the predefined dataset and populate the exercises table, follow t
 2.  **Open a New Terminal Tab**:
     
     -   Open a new terminal tab and navigate to the project directory.
+
+3. **Activate the Virtual Environment**:
+
+     ```sh
+	 source .venv/bin/activate
+    ```
         
-3.  **Navigate to the exercises_data Directory**:
+4.  **Navigate to the exercises_data Directory**:
     
     -   Change to the `exercises_data` directory:
                 
-        ```sh
-        cd exercises_data
+	```sh
+	    cd exercises_data
+	```
         
-        ```
-        
-4.  **Uncomment the Last Line in the Script**:
+5.  **Uncomment the Last Line in the Script**:
     
     -   Open the `populate_exercises_table.py` script and uncomment the last line:
         
@@ -309,11 +312,11 @@ To make use of the predefined dataset and populate the exercises table, follow t
 		   <img src="https://i.imgur.com/GZ8A0Z0.png" alt="" />
 </div>
         
-5.  **Pass the Admin JWT Access Token**:
+6.  **Pass the Admin JWT Access Token**:
     
     -   Make sure to pass the Admin JWT access token, which you can obtain from the `/admin/login` endpoint in the Swagger interface.
         
-6.  **Run the Script to Populate Exercises Table**:
+7.  **Run the Script to Populate Exercises Table**:
     
     -   Execute the script to read the `newExercisesDataset.csv` file and populate the exercises table line by line:
                 
