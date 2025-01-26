@@ -29,7 +29,8 @@ drive = ManageDrive()
 
 
 @views_bp.route("/exercises", methods=["GET"], strict_slashes=False)
-@roles_required("Admin", "Developer")
+@jwt_required()
+@user_exists
 def get_all_exercises():
     """Retrieve all the exercises from the database with pagination"""
     page = request.args.get("page", 1, type=int)

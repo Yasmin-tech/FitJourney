@@ -6,6 +6,7 @@ from models.base import db
 from models.workout_session import WorkoutSession
 from models.day import Day
 from models.exercise import Exercise
+from models.custom_exercise import CustomExercise
 from models.user import User
 from flask import request, jsonify, abort, url_for
 from flask_jwt_extended import jwt_required
